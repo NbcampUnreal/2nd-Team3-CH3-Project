@@ -29,6 +29,12 @@ private:
 	UStaticMeshComponent* bulletMesh;
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	UProjectileMovementComponent* projectileMovement;
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	UParticleSystem* hitEffect;
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	USoundBase* hitSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	UMaterialInterface* hitDecal;
 
 	AFirearm* gun;
 
@@ -39,4 +45,6 @@ private:
 		UPrimitiveComponent* OtherComp, 
 		FVector NormalImpulse, 
 		const FHitResult& Hit);
+
+
 };

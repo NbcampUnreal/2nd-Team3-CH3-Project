@@ -3,6 +3,7 @@
 #include "Weapon/Bullet.h"
 #include "..\..\Source\ShootingGame\Weapon\Firearm.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ABullet::ABullet()
 {
@@ -71,6 +72,21 @@ void ABullet::onHit(
 		if (OtherActor && OtherActor != this)
 		{
 			gun->DealDamage(OtherActor);
+
+			if (hitEffect)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), hitEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			}
+
+			if (hitDecal)
+			{
+				UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, FVector(10.0f), Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			}
+
+			if (hitSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), hitSound, Hit.ImpactPoint);
+			}
 		}
 
 		gun->ReturnBulletToPool(this);
