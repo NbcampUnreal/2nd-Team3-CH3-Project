@@ -1,0 +1,23 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Weapon/Parts.h"
+#include "Magazine.generated.h"
+
+class AFirearm;
+
+UCLASS()
+class SHOOTINGGAME_API AMagazine : public AParts
+{
+	GENERATED_BODY()
+	
+public:
+	AMagazine();
+
+	virtual void AttachMagToWeapon(AFirearm* Weapon);
+
+	UFUNCTION(BlueprintPure, Category = "Magazine")
+	virtual int32 GetMagazineCapacity() const;
+protected:
+	int32 MagazineCapacity;
+};
