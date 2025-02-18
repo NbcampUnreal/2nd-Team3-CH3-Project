@@ -12,7 +12,6 @@ void AMagazine::AttachMagToWeapon(AFirearm* Weapon)
 {
 	if (Weapon)
 	{
-		Weapon->EquipMagazine(this);
 		this->AttachToComponent(Weapon->WeaponMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MagazineSocket"));
 	}
 }
