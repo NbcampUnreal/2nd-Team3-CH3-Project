@@ -6,6 +6,7 @@
 
 class AMagazine;
 class ABullet;
+class AParts;
 
 UCLASS()
 class SHOOTINGGAME_API AFirearm : public ABaseWeapon
@@ -23,14 +24,15 @@ public:
 	USoundBase* EmptyAmmoSound;
 
 	UFUNCTION()
-	virtual void EquipMagazine(AMagazine* Magazine);
+	virtual void EquipParts(AParts* Parts);
 	UFUNCTION()
 	virtual void ReturnBulletToPool(ABullet* UsedBullet);
 	UFUNCTION()
 	virtual void AddAmmo(int32 AmmoToAdd);
 	UFUNCTION()
 	virtual int32 GetCurrentAmmoValue() const;
-
+	UFUNCTION()
+	virtual void DetachParts(FName SocketName);
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
@@ -50,7 +52,7 @@ protected:
 	FTimerHandle ReloadTimerHandle;
 
 	UFUNCTION()
-	virtual void Attack();
+	virtual void Attack() override;
 	UFUNCTION()
 	virtual void Reload();
 	UFUNCTION()
@@ -58,4 +60,5 @@ protected:
 
 private:
 	TArray<ABullet*> bulletPool;
+
 };

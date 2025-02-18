@@ -85,13 +85,16 @@ void AFirearm::Reload()
 	//HUDUpdate
 }
 
-void AFirearm::EquipMagazine(AMagazine* Magazine)
+void AFirearm::EquipParts(AParts* Parts)
 {
-	if (Magazine)
+	if (Parts && Parts->IsA(AMagazine::StaticClass()))
 	{
-		MaxReloadedAmmo = Magazine->GetMagazineCapacity();
+		AMagazine* Magazine = Cast<AMagazine>(Parts);
 		Magazine->AttachMagToWeapon(this);
+		MaxReloadedAmmo = Magazine->GetMagazineCapacity();
 	}
+
+
 }
 
 void AFirearm::Fire()
@@ -135,4 +138,24 @@ void AFirearm::Fire()
 void AFirearm::ReturnBulletToPool(ABullet* UsedBullet)
 {
 	bulletPool.Add(UsedBullet);
+}
+
+void AFirearm::DetachParts(FName SocketName)
+{
+	if (SocketName == "MagazineSocket")
+	{
+		MaxReloadedAmmo = 0;
+	}
+
+	TArray<AActor*> AttachedActors;
+	this->GetAttachedActors(AttachedActors);
+
+	for (AActor* Actor : AttachedActors)
+	{
+		if (Actor && Actor->GetAttachParentSocketName() == SocketName)
+		{
+			Actor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			return;
+		}
+	}	
 }
