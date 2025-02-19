@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Firearm.h"
-#include "..\..\Source\ShootingGame\Weapon/Bullet.h"
-#include "..\..\Source\ShootingGame\Weapon/Magazine.h"
+#include "Weapon/Bullet.h"
+#include "Weapon/Magazine.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,7 +13,7 @@ AFirearm::AFirearm()
 
 	BulletMesh = nullptr;
 	BulletSpeed = 3000.0f;
-	MaxAmmo = 0;
+	MaxAmmo = 200;
 	CurrentAmmo = 0;
 	MaxReloadedAmmo = 0;
 	ReloadedAmmo = 0;
@@ -23,12 +23,10 @@ AFirearm::AFirearm()
 
 void AFirearm::Attack()
 {
-	if (bIsLoadingComplete)
+	if (ReloadedAmmo > 0 && bIsLoadingComplete)
 	{
-		if (CurrentAmmo > 0 && bIsCooltimeEnd)
+		if (bIsCooltimeEnd)
 		{
-			Super::Attack();
-
 			if (AttackNiagara)
 			{
 				UNiagaraComponent* AttackEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(
@@ -44,17 +42,19 @@ void AFirearm::Attack()
 
 			Fire();
 
-			CurrentAmmo--;
+			ReloadedAmmo--;
 		}
+		Super::Attack();
+	}
 
-		if (CurrentAmmo <= 0 && bIsCooltimeEnd)
+	if (ReloadedAmmo <= 0 && bIsCooltimeEnd)
+	{
+		if (EmptyAmmoSound)
 		{
-			if (EmptyAmmoSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyAmmoSound, FVector::ZeroVector);
-			}
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyAmmoSound, GetActorLocation());
 		}
 	}
+
 }
 
 int32 AFirearm::GetCurrentAmmoValue() const
@@ -65,36 +65,43 @@ int32 AFirearm::GetCurrentAmmoValue() const
 void AFirearm::AddAmmo(int32 AmmoToAdd)
 {
 	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MaxAmmo);
-	//HUDUpdate
 }
 
 void AFirearm::Reload()
 {
+	if (ReloadSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetActorLocation());
+	}
 	bIsLoadingComplete = false;
 	GetWorldTimerManager().SetTimer(
 		ReloadTimerHandle, 
 		[this]() {
+			int32 ReloadValue = FMath::Min(MaxReloadedAmmo - ReloadedAmmo, CurrentAmmo);
+			CurrentAmmo =FMath::Max(CurrentAmmo - ReloadValue, 0);
+			ReloadedAmmo = MaxReloadedAmmo;
 			bIsLoadingComplete = true; 
-			int32 ReloadValue = MaxReloadedAmmo - ReloadedAmmo;
-			CurrentAmmo -= ReloadValue;
 		}, 
 		ReloadTime, 
 		false
 	);
 
-	//HUDUpdate
 }
 
 void AFirearm::EquipParts(AParts* Parts)
 {
-	if (Parts && Parts->IsA(AMagazine::StaticClass()))
+	if (Parts)
 	{
-		AMagazine* Magazine = Cast<AMagazine>(Parts);
-		Magazine->AttachMagToWeapon(this);
-		MaxReloadedAmmo = Magazine->GetMagazineCapacity();
+		DetachParts(Parts->SocketNameForAttach);
+		Parts->AttachToComponent(WeaponMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Parts->SocketNameForAttach);
+
+		if (Parts->IsA(AMagazine::StaticClass()))
+		{
+			AMagazine* Magazine = Cast<AMagazine>(Parts);
+			MaxReloadedAmmo = Magazine->GetMagazineCapacity();
+			ReloadedAmmo = MaxReloadedAmmo;
+		}
 	}
-
-
 }
 
 void AFirearm::Fire()
@@ -142,11 +149,6 @@ void AFirearm::ReturnBulletToPool(ABullet* UsedBullet)
 
 void AFirearm::DetachParts(FName SocketName)
 {
-	if (SocketName == "MagazineSocket")
-	{
-		MaxReloadedAmmo = 0;
-	}
-
 	TArray<AActor*> AttachedActors;
 	this->GetAttachedActors(AttachedActors);
 
@@ -158,4 +160,10 @@ void AFirearm::DetachParts(FName SocketName)
 			return;
 		}
 	}	
+
+	if (SocketName == "MagazineSocket")
+	{
+		MaxReloadedAmmo = 0;
+	}
+
 }

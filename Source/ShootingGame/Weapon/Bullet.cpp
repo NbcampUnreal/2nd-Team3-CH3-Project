@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Weapon/Bullet.h"
-#include "..\..\Source\ShootingGame\Weapon\Firearm.h"
+#include "Weapon/Firearm.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
