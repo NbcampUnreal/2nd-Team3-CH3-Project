@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "BaseWeapon.h"
-#include "..\..\Source\ShootingGame\Default\DefaultCharacter.h"
+#include "Default/DefaultCharacter.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "HAL/PlatformTime.h"
@@ -15,7 +15,8 @@ ABaseWeapon::ABaseWeapon()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(RootComponent);
 
-	USkeletalMesh* Weapon = LoadObject<USkeletalMesh>(nullptr, TEXT("/Game/LP_LiteWeapons_JC/Models/SK_WeaponA.SK_WeaponA"));
+
+	USkeletalMesh* Weapon = LoadObject<USkeletalMesh>(nullptr, TEXT("/Game/Weapons/Firearms/Rifle/SK_AR4.SK_AR4"));
 	if (Weapon)
 	{
 		WeaponMesh->SetSkeletalMesh(Weapon);
@@ -31,7 +32,7 @@ ABaseWeapon::ABaseWeapon()
 	WeaponType = "";
 	Damage = 0.0f;
 
-	AttackRate = 1.0f;
+	AttackRate = 0.1f;
 	AttackDistance = 10.0f;
 }
 
@@ -43,19 +44,14 @@ float ABaseWeapon::GetDamageValue() const
 
 void ABaseWeapon::Attack()
 {
-	CurrentAttackTime = (float)FPlatformTime::Seconds();
-	float AttackElapse = CurrentAttackTime - LastAttackTime;
-		
-	bIsCooltimeEnd = AttackElapse >= AttackRate ? true : false;
-	
 	if (bIsCooltimeEnd)
 	{
+		bIsCooltimeEnd = false;
 		if (AttackSound)
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), AttackSound, FVector::ZeroVector);
 		}
-
-		LastAttackTime = (float)FPlatformTime::Seconds();
+		GetWorldTimerManager().SetTimer(attackRateTimerHandle, [this]() {bIsCooltimeEnd = true; }, AttackRate, false);
 	}
 }
 
@@ -66,7 +62,6 @@ void ABaseWeapon::DealDamage(AActor* Enemy)
 		UGameplayStatics::ApplyDamage(Enemy, Damage, nullptr, this, UDamageType::StaticClass());
 	}
 }
-
 
 void ABaseWeapon::AttachWeaponToCharacter(ADefaultCharacter* PlayerCharacter)
 {
