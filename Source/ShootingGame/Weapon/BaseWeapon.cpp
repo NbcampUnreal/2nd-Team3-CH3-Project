@@ -32,8 +32,7 @@ ABaseWeapon::ABaseWeapon()
 	WeaponType = "";
 	Damage = 0.0f;
 
-	AttackRate = 0.1f;
-	AttackDistance = 10.0f;
+	AttackRate = 5.0f;
 }
 
 

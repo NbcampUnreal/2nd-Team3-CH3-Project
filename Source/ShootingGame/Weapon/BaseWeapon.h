@@ -31,7 +31,7 @@ public:
 	virtual float GetDamageValue() const;
 	UFUNCTION()
 	virtual void DealDamage(AActor* Enemy);
-	
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Attack();
 
 protected:
@@ -40,8 +40,6 @@ protected:
 	float Damage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|WeaponStat")
 	float AttackRate;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|WeaponStat")
-	float AttackDistance;
 
 	bool bIsCooltimeEnd;
 	float CurrentAttackTime;

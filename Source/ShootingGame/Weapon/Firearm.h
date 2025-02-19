@@ -33,7 +33,7 @@ public:
 	virtual int32 GetCurrentAmmoValue() const;
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void DetachParts(FName SocketName);
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
+
 	virtual void Attack() override;
 
 protected:
@@ -62,5 +62,5 @@ protected:
 
 private:
 	TArray<ABullet*> bulletPool;
-
+	bool bIsMagazineAttached;
 };

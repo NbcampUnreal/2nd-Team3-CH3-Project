@@ -12,7 +12,20 @@ class SHOOTINGGAME_API AMeleeWeapon : public ABaseWeapon
 public:
 	AMeleeWeapon();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* HitEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	USoundBase* HitSound;
+
 protected:
 	virtual void Attack() override;
-	virtual void DealDamage(AActor* Enemy) override;
+	
+	UFUNCTION()
+	virtual void OnEnemyOverlap(
+		UPrimitiveComponent* OverlappedComp, 
+		AActor* OtherActor, 
+		UPrimitiveComponent* OtherComp, 
+		int32 OtherBodyindex, 
+		bool bFromSweep, 
+		const FHitResult& Sweep);
 };
