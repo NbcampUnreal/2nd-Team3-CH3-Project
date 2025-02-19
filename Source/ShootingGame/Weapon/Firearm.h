@@ -23,37 +23,39 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Component")
 	USoundBase* EmptyAmmoSound;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void EquipParts(AParts* Parts);
 	UFUNCTION()
 	virtual void ReturnBulletToPool(ABullet* UsedBullet);
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void AddAmmo(int32 AmmoToAdd);
-	UFUNCTION()
+	UFUNCTION(BlueprintPure, Category = "Weapon")
 	virtual int32 GetCurrentAmmoValue() const;
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void DetachParts(FName SocketName);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void Attack() override;
+
 protected:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
 	float BulletSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
 	int32 MaxAmmo;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Bullet")
 	int32 CurrentAmmo;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Bullet")
 	int32 MaxReloadedAmmo;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bullet")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Bullet")
 	int32 ReloadedAmmo;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
 	float ReloadTime;
+
 	bool bIsLoadingComplete;
 	TSubclassOf<ABullet> BulletClass;
 	FTimerHandle ReloadTimerHandle;
 
-	UFUNCTION()
-	virtual void Attack() override;
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Reload();
 	UFUNCTION()
 	virtual void Fire();

@@ -31,6 +31,8 @@ public:
 	virtual float GetDamageValue() const;
 	UFUNCTION()
 	virtual void DealDamage(AActor* Enemy);
+	
+	virtual void Attack();
 
 protected:
 	// 공격관리
@@ -45,9 +47,10 @@ protected:
 	float CurrentAttackTime;
 	float LastAttackTime;
 
-	virtual void Attack();
+
 	virtual void AttachWeaponToCharacter(ADefaultCharacter* PlayerCharacter);
 
 private:
 
+	FTimerHandle attackRateTimerHandle;
 };
