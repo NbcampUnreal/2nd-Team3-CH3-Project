@@ -1,4 +1,4 @@
-#include "HexboundGameState.h"
+ï»¿#include "HexboundGameState.h"
 #include "HexboundGameInstance.h"
 #include "HexboundPlayerController.h"
 #include "Blueprint/UserWidget.h"
@@ -27,7 +27,7 @@ void AHexboundGameState::BeginPlay()
 
 void AHexboundGameState::InitUIMangerProperties()
 {
-	// TO DO : Intro UI ÈÄ ¸ÞÀÎ ¸Þ´º UI º¸ÀÌµµ·Ï ¼öÁ¤ ¿¹Á¤
+	// TO DO : Intro UI í›„ ë©”ì¸ ë©”ë‰´ UI ë³´ì´ë„ë¡ ìˆ˜ì • ì˜ˆì •
 	UUIManager* UIManager = GetGameInstance()->GetSubsystem<UUIManager>();
 	if (UIManager)
 	{

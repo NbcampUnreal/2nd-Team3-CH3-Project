@@ -1,4 +1,4 @@
-#include "HexboundPlayerController.h"
+ï»¿#include "HexboundPlayerController.h"
 #include "Blueprint/UserWidget.h"
 
 AHexboundPlayerController::AHexboundPlayerController()
@@ -16,7 +16,7 @@ void AHexboundPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// TO DO : UI¸¸ ÀÖ´Â È­¸éÀÏ¶§ Player ¾Èº¸ÀÌ°Ô ÇÏ´Â¹ı Ã£±â - ÇÑÁ¤Çõ
+	// TO DO : UIë§Œ ìˆëŠ” í™”ë©´ì¼ë•Œ Player ì•ˆë³´ì´ê²Œ í•˜ëŠ”ë²• ì°¾ê¸° - í•œì •í˜
 	//SetActorHiddenInGame(true);
 
 }

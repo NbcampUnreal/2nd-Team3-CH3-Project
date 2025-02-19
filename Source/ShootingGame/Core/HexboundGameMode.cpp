@@ -1,4 +1,4 @@
-#include "HexboundGameMode.h"
+ï»¿#include "HexboundGameMode.h"
 
 #include "Default/DefaultCharacter.h"
 #include "Core/HexboundGameInstance.h"
@@ -8,7 +8,7 @@
 
 AHexboundGameMode::AHexboundGameMode()
 {
-	// Project Settings > Maps & Modes -> BP ·Î °¨½Ñ ÈÄ ÀÛ¾÷ 
+	// Project Settings > Maps & Modes -> BP ë¡œ ê°ì‹¼ í›„ ì‘ì—… 
 
 	DefaultPawnClass = ADefaultCharacter::StaticClass();
 	//HUDClass = AHexboundHUD::StaticClass();
