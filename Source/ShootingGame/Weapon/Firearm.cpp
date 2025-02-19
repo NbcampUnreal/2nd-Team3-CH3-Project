@@ -19,6 +19,7 @@ AFirearm::AFirearm()
 	ReloadedAmmo = 0;
 	ReloadTime = 1.0f;
 	bIsLoadingComplete = true;
+	bIsMagazineAttached = false;
 }
 
 void AFirearm::Attack()
@@ -69,23 +70,25 @@ void AFirearm::AddAmmo(int32 AmmoToAdd)
 
 void AFirearm::Reload()
 {
-	if (ReloadSound)
+	if (bIsLoadingComplete && bIsMagazineAttached)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetActorLocation());
+		if (ReloadSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetActorLocation());
+		}
+		bIsLoadingComplete = false;
+		GetWorldTimerManager().SetTimer(
+			ReloadTimerHandle,
+			[this]() {
+				int32 ReloadValue = FMath::Min(MaxReloadedAmmo - ReloadedAmmo, CurrentAmmo);
+				CurrentAmmo = FMath::Max(CurrentAmmo - ReloadValue, 0);
+				ReloadedAmmo = MaxReloadedAmmo;
+				bIsLoadingComplete = true;
+			},
+			ReloadTime,
+			false
+		);
 	}
-	bIsLoadingComplete = false;
-	GetWorldTimerManager().SetTimer(
-		ReloadTimerHandle, 
-		[this]() {
-			int32 ReloadValue = FMath::Min(MaxReloadedAmmo - ReloadedAmmo, CurrentAmmo);
-			CurrentAmmo =FMath::Max(CurrentAmmo - ReloadValue, 0);
-			ReloadedAmmo = MaxReloadedAmmo;
-			bIsLoadingComplete = true; 
-		}, 
-		ReloadTime, 
-		false
-	);
-
 }
 
 void AFirearm::EquipParts(AParts* Parts)
@@ -100,6 +103,7 @@ void AFirearm::EquipParts(AParts* Parts)
 			AMagazine* Magazine = Cast<AMagazine>(Parts);
 			MaxReloadedAmmo = Magazine->GetMagazineCapacity();
 			ReloadedAmmo = MaxReloadedAmmo;
+			bIsMagazineAttached = true;
 		}
 	}
 }
@@ -164,6 +168,7 @@ void AFirearm::DetachParts(FName SocketName)
 	if (SocketName == "MagazineSocket")
 	{
 		MaxReloadedAmmo = 0;
+		bIsMagazineAttached = false;
 	}
 
 }
