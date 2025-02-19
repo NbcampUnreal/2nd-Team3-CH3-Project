@@ -4,6 +4,7 @@
 #include "Engine/GameInstance.h"
 #include "HexboundGameInstance.generated.h"
 
+
 UCLASS()
 class SHOOTINGGAME_API UHexboundGameInstance : public UGameInstance
 {
@@ -11,5 +12,7 @@ class SHOOTINGGAME_API UHexboundGameInstance : public UGameInstance
 
 public:
 	UHexboundGameInstance();
-	
+
+	virtual void Init() override;
+
 };

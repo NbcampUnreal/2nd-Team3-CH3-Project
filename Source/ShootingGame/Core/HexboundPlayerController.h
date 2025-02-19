@@ -8,5 +8,17 @@ UCLASS()
 class SHOOTINGGAME_API AHexboundPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+
+public:
+	AHexboundPlayerController();
+
+	virtual void BeginPlay() override;
+
+	virtual void SetupInputComponent() override;
+
+	void ShowCursor(bool isShow);
 	
+protected:
+	
+
 };

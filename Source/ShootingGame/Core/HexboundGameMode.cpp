@@ -8,7 +8,7 @@
 
 AHexboundGameMode::AHexboundGameMode()
 {
-	// Project Settings > Maps & Modes
+	// Project Settings > Maps & Modes -> BP 로 감싼 후 작업 
 
 	DefaultPawnClass = ADefaultCharacter::StaticClass();
 	//HUDClass = AHexboundHUD::StaticClass();
