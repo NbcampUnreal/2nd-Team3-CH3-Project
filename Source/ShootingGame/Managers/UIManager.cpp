@@ -1,28 +1,59 @@
 #include "UIManager.h"
+#include "Core/HexboundPlayerController.h"
+#include "Core/HexboundGameState.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "EnhancedInputSubsystems.h"
+#include "Blueprint/UserWidget.h"
+
+UUIManager::UUIManager()
+{
+
+}
 
 void UUIManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	UE_LOG(LogTemp, Warning, TEXT("Init UIManager"));
 
+	World = GetGameInstance()->GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ShowMainUI: World is null"));
+		return;
+	}
+
 }
 
-void UUIManager::ShowIntroUI()
+void UUIManager::ShowUI(EHUDState state)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Show Intro UI!!"));
-}
+	if (CurrentWidgetInstance)
+	{
+		CurrentWidgetInstance->RemoveFromParent();
+		CurrentWidgetInstance = nullptr;
+	}
 
-void UUIManager::ShowMainUI()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Show Main UI!!"));
-}
+	if (WidgetInstances.Num() != 0)
+	{
+		WidgetInstances.Empty();
+	}
 
-void UUIManager::ShowSettingUI()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Show Setting UI!!"));
-}
+	//int index = static_cast<int>(state);
+	TSubclassOf<UUserWidget> WidgetClass = WidgetClasses[static_cast<int>(state)];
 
-void UUIManager::ShowInGameUI()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Show InGame UI!!"));
+	if (WidgetClass)
+	{
+		UUserWidget* widgetInstance = CreateWidget<UUserWidget>(World, WidgetClass);
+
+		CurrentWidgetInstance = widgetInstance;
+		WidgetInstances.Add(widgetInstance);
+
+		if (widgetInstance)
+		{
+			widgetInstance->AddToViewport();
+		}
+
+		if (HexboundController) HexboundController->ShowCursor(true);
+	}
+
 }
