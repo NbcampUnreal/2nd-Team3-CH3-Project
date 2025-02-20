@@ -26,6 +26,15 @@ void AMyPlayerController::BeginPlay()
 			}
 		}
 	}
+
+	if (MeleeAttackAction)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MeleeAttackAction is set correctly."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("MeleeAttackAction is NULL! Check Input Mapping Context."));
+	}
 }
 
 

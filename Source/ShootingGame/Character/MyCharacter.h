@@ -8,6 +8,8 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class ABaseWeapon;
+
 struct FInputActionValue;
 
 UCLASS()
@@ -43,6 +45,12 @@ protected:
 	UFUNCTION()
 	void StopCrouch(const FInputActionValue& value);
 
+	UFUNCTION()
+	void TakeDamage(float DamageAmount);
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PerformMeleeAttack();
+
+
 
 private:
 	float NormalSpeed;
@@ -51,4 +59,12 @@ private:
 	float CrouchSpeed;
 	float CrouchSpeedMultiplier;
 
+	float Health = 100.0f;
+	float MeleeDamage = 3.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TSubclassOf<ABaseWeapon> DefaultWeaponClass;
+
+	UPROPERTY()
+	ABaseWeapon* EquippedWeapon;
 };
