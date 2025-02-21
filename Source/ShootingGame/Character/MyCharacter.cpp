@@ -2,6 +2,8 @@
 
 #include "Character/MyCharacter.h"
 #include "Character/MyPlayerController.h"
+#include "Weapon/BaseWeapon.h"
+#include "Weapon/MeleeWeapon.h"
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -35,6 +37,21 @@ AMyCharacter::AMyCharacter()
 	bUseControllerRotationYaw = true;
 
 }
+
+//void AMyCharacter::BeginPlay()
+//{
+//	Super::BeginPlay();
+//
+//	// 기본 무기 장착
+//	if (DefaultWeaponClass)
+//	{
+//		EquippedWeapon = GetWorld()->SpawnActor<ABaseWeapon>(DefaultWeaponClass);
+//		if (EquippedWeapon)
+//		{
+//			EquippedWeapon->AttachWeaponToCharacter(this);
+//		}
+//	}
+//}
 
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -105,6 +122,16 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 					ETriggerEvent::Completed,
 					this,
 					&AMyCharacter::StopCrouch
+				);
+			}
+			if (PlayerController->MeleeAttackAction)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Binding MeleeAttackAction to PerformMeleeAttack"));
+				EnhancedInput->BindAction(
+					PlayerController->MeleeAttackAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMyCharacter::PerformMeleeAttack
 				);
 			}
 		}
@@ -190,4 +217,46 @@ void AMyCharacter::StopCrouch(const FInputActionValue& value)
 	if (GetCharacterMovement()) {
 		GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 	}
+}
+
+void AMyCharacter::TakeDamage(float DamageAmount)
+{
+	Health -= DamageAmount;
+	Health = FMath::Max(Health, 0.0f);
+	UE_LOG(LogTemp, Warning, TEXT("체력: %f"), Health);
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("체력: %f"), Health));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NULL"));
+	}
+}
+
+void AMyCharacter::PerformMeleeAttack()
+{
+	UE_LOG(LogTemp, Warning, TEXT("PerformMeleeAttack")); // 실행 확인용 로그
+
+	if (EquippedWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Using"));
+		EquippedWeapon->Attack();
+
+		// 자기 자신에게 데미지 적용 (테스트용)
+		TakeDamage(EquippedWeapon->GetDamageValue());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("No Weapon"));
+	}
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Attack();
+
+		// 자기 자신에게 데미지 적용 (테스트용)
+		TakeDamage(EquippedWeapon->GetDamageValue());
+	}
+	UE_LOG(LogTemp, Warning, TEXT("근접 공격 %f damage!"), MeleeDamage);
+	TakeDamage(MeleeDamage);
 }

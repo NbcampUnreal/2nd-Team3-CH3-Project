@@ -170,5 +170,4 @@ void AFirearm::DetachParts(FName SocketName)
 		MaxReloadedAmmo = 0;
 		bIsMagazineAttached = false;
 	}
-
 }
