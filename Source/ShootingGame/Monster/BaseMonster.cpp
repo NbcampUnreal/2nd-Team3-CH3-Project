@@ -29,21 +29,18 @@ float ABaseMonster::GetHealth() const
 	return Health;
 }
 
-// Called when the game starts or when spawned
 void ABaseMonster::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
 void ABaseMonster::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-// Called to bind functionality to input
 void ABaseMonster::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -57,11 +54,11 @@ void ABaseMonster::Attack()
 
 void ABaseMonster::OnHitCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Overlap!!")));
-		UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr, this, UDamageType::StaticClass());
+		//UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr, this, UDamageType::StaticClass());
+		UGameplayStatics::ApplyDamage(this, 10.0f, nullptr, this, UDamageType::StaticClass());
 	}
 }
 
@@ -70,7 +67,8 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	Health = FMath::Clamp(Health - DamageAmount, 0.0f, MaxHealth);
-	UE_LOG(LogTemp, Warning, TEXT("Monster Health decreased to: %f"), Health);
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster Health decreased to: %f"), Health));
 
 	if (Health <= 0.0f)
 	{
@@ -82,8 +80,12 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 
 void ABaseMonster::OnDeath()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Monster OnDeath"));
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster OnDeath")));
+	//UE_LOG(LogTemp, Warning, TEXT("Monster OnDeath"));
+
 	DropItem();
+
+	Destroy();
 }
 
 Item* ABaseMonster::DropItem()
