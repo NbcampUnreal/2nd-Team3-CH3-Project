@@ -3,6 +3,7 @@
 #include "HexboundPlayerController.h"
 #include "Blueprint/UserWidget.h"
 #include "Managers/UIManager.h"
+#include "Kismet/GameplayStatics.h"
 
 AHexboundGameState::AHexboundGameState()
 {
@@ -13,38 +14,59 @@ void AHexboundGameState::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Init();
+	OnGameStart();
+}
+
+void AHexboundGameState::Init()
+{
 	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
-		HexBoundPlayerController = Cast<AHexboundPlayerController>(PlayerController);
+		AHexboundPlayerController* HexBoundPlayerController = Cast<AHexboundPlayerController>(PlayerController);
+		hexBoundPlayerController = HexBoundPlayerController;
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Can't Set HexboundPlayerController At UIMangaer"));
 	}
-
-	InitUIMangerProperties();
 }
-
-void AHexboundGameState::InitUIMangerProperties()
-{
-	// TO DO : Intro UI 후 메인 메뉴 UI 보이도록 수정 예정
-	UUIManager* UIManager = GetGameInstance()->GetSubsystem<UUIManager>();
-	if (UIManager)
-	{
-		UIManager->WidgetClasses = WidgetClasses;
-		UE_LOG(LogTemp, Warning, TEXT("Set Widget Classes"));
-
-		UIManager->HexboundController = HexBoundPlayerController;
-
-		UIManager->ShowUI(EHUDState::MainMenu);
-	}
-}
-
 
 void AHexboundGameState::OnGameStart()
 {
 	// TO DO : Level Load ( Main Level )
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+		if (HexboundGameInstance)
+		{
+			UUIManager* UIManager = HexboundGameInstance->GetSubsystem<UUIManager>();
 
-	HexBoundPlayerController->ShowCursor(false);
+			switch (HexboundGameInstance->GetCurrentLevel())
+			{
+			case ELevel::MenuLevel:
+				UIManager->SetUIState(EHUDState::MainMenu);
+				hexBoundPlayerController->ShowCursor(true);
+				break;
+			case ELevel::MainLevel:
+				UIManager->SetUIState(EHUDState::InGameBase);
+				hexBoundPlayerController->ShowCursor(false);
+				break;
+			default:
+				break;
+			}
 
+		}
+	}
+}
+
+void AHexboundGameState::OpenLevel(ELevel level)
+{
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+		HexboundGameInstance->SetCurrentLevel(level);
+	}
+
+	FName levelName = FName(*StaticEnum<ELevel>()->GetNameStringByValue(static_cast<int64>(level)));
+	UGameplayStatics::OpenLevel(GetWorld(), levelName);
 }

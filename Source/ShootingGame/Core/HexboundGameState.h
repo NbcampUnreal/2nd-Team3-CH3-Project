@@ -5,6 +5,7 @@
 #include "HexboundGameState.generated.h"
 
 class AHexboundPlayerController;
+enum class ELevel : uint8;
 
 UCLASS()
 class SHOOTINGGAME_API AHexboundGameState : public AGameState
@@ -15,14 +16,14 @@ public:
 	AHexboundGameState();
 
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
-	TArray<TSubclassOf<UUserWidget>> WidgetClasses;
 	
 	UFUNCTION(BlueprintCallable)
 	void OnGameStart();
 
+	UFUNCTION(BlueprintCallable)
+	void OpenLevel(ELevel level);
+
 private:
-	void InitUIMangerProperties();
-	AHexboundPlayerController* HexBoundPlayerController;
+	void Init();
+	AHexboundPlayerController* hexBoundPlayerController;
 };
