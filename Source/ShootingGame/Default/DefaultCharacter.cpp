@@ -12,6 +12,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
+#include "Core/HexboundGameInstance.h"
+#include "Core/HexboundPlayerController.h"
+#include "Managers/UIManager.h"
+
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 // Sets default values
@@ -49,6 +53,25 @@ ADefaultCharacter::ADefaultCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+
+	MaxHealth = 100.0f;
+	Health = MaxHealth;
+
+}
+
+float ADefaultCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	Health = FMath::Clamp(Health - DamageAmount, 0.0f, MaxHealth);
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Player Health decreased to: %f"), Health));
+
+	if (Health <= 0.0f)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Player Die!!")));
+	}
+
+	return ActualDamage;
 }
 
 void ADefaultCharacter::Move(const FInputActionValue& Value)
@@ -86,6 +109,87 @@ void ADefaultCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+void ADefaultCharacter::OnInputInventoryKey()
+{
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+		if (HexboundGameInstance == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find Hexbound GameInstance"));
+			return;
+		}
+
+		UUIManager* UIManager = GetGameInstance()->GetSubsystem<UUIManager>();
+		if (UIManager == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find UIManager"));
+			return;
+		}
+
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+		{
+			AHexboundPlayerController* HexBoundPlayerController = Cast<AHexboundPlayerController>(PlayerController);
+
+			if (bIsShowInventory)
+			{
+				UIManager->HideUI(EHUDState::Inventory);
+				UE_LOG(LogTemp, Warning, TEXT("Hide Inventory UI"));
+				HexBoundPlayerController->ShowCursor(false);
+			}
+			else
+			{
+				UIManager->ShowUI(EHUDState::Inventory);
+				UE_LOG(LogTemp, Warning, TEXT("Show Inventory UI"));
+				HexBoundPlayerController->ShowCursor(true);
+			}
+
+			bIsShowInventory = !bIsShowInventory;
+		}
+		
+	}
+}
+
+void ADefaultCharacter::OnInputESCKey()
+{
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+		if (HexboundGameInstance == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find Hexbound GameInstance"));
+			return;
+		}
+
+		UUIManager* UIManager = GetGameInstance()->GetSubsystem<UUIManager>();
+		if (UIManager == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find UIManager"));
+			return;
+		}
+
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+		{
+			AHexboundPlayerController* HexBoundPlayerController = Cast<AHexboundPlayerController>(PlayerController);
+
+			if (bIsShowPauseUI)
+			{
+				UIManager->HideUI(EHUDState::Pause);
+				UE_LOG(LogTemp, Warning, TEXT("Hide Pause UI"));
+				HexBoundPlayerController->ShowCursor(false);
+			}
+			else
+			{
+				UIManager->ShowUI(EHUDState::Pause);
+				UE_LOG(LogTemp, Warning, TEXT("Show Pause UI"));
+				HexBoundPlayerController->ShowCursor(true);
+			}
+
+			bIsShowPauseUI = !bIsShowPauseUI;
+		}
+	}
+}
+
 
 void ADefaultCharacter::NotifyControllerChanged()
 {
@@ -113,6 +217,9 @@ void ADefaultCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ADefaultCharacter::Look);
+
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputInventoryKey);
+		EnhancedInputComponent->BindAction(SettingAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputESCKey);
 	}
 	else
 	{

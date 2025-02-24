@@ -44,9 +44,28 @@ class SHOOTINGGAME_API ADefaultCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/** Inventory Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* InventoryAction;
+
+	/** Setting Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SettingAction;
+
 public:
 	ADefaultCharacter();
 
+	UFUNCTION()
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		AController* EventInstigator,
+		AActor* DamageCauser) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
+	float MaxHealth;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
+	float Health;
 
 protected:
 
@@ -55,6 +74,14 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	bool bIsShowInventory;
+	UFUNCTION(BlueprintCallable)
+	void OnInputInventoryKey();
+
+	bool bIsShowPauseUI;
+	UFUNCTION(BlueprintCallable)
+	void OnInputESCKey();
 
 
 protected:
