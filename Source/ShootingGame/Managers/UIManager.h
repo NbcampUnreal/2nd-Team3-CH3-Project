@@ -8,18 +8,22 @@ UENUM(BlueprintType)
 enum class EHUDState : uint8
 {
 	//Intro = 0,
-	MainMenu = 0,
+	MenuBase = 0,
+	MainMenu,
 	Setting,
 	AudioSetting,
 	VideoSetting,
 	KeyMapping,
 	Archivements,
-	InGame,
-	Pause
+
+	InGameBase,
+
+	Pause,
+	Inventory
 };
 
 
-class AHexboundPlayerController;
+// class AHexboundPlayerController;
 
 UCLASS()
 class SHOOTINGGAME_API UUIManager : public UGameInstanceSubsystem
@@ -30,19 +34,29 @@ public:
 	UUIManager();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	UWorld* World;
-	AHexboundPlayerController* HexboundController;
-
-	UFUNCTION(BlueprintCallable, Category = "HUD")
-	void ShowUI(EHUDState state);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	TSubclassOf<UUserWidget> GetWidgetClasse(EHUDState state);
+	void SetWidgetClasses(TArray<TSubclassOf<UUserWidget>> widgets);
 	TArray<TSubclassOf<UUserWidget>> WidgetClasses;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
-	UUserWidget* CurrentWidgetInstance;
+	TMap<EHUDState, UUserWidget*> WidgetInstances;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
-	TArray<UUserWidget*> WidgetInstances;
+	//UWorld* World;
+	//AHexboundPlayerController* HexboundController;
+
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void SetUIState(EHUDState state);
+
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ShowUI(EHUDState state);
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void HideUI(EHUDState state);
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void HideAllUI();
+
+	void ShowInventory(bool isShow);
+	UUserWidget* InventoryWidgetInstance;
+
+private:
 
 };
