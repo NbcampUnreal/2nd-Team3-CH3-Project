@@ -11,7 +11,7 @@
 
 AMyCharacter::AMyCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	//스프링 암
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -36,6 +36,10 @@ AMyCharacter::AMyCharacter()
 
 	bUseControllerRotationYaw = true;
 
+	if (CameraComp)
+	{
+		DefaultFOV = CameraComp->FieldOfView;
+	}
 }
 
 //void AMyCharacter::BeginPlay()
@@ -52,6 +56,18 @@ AMyCharacter::AMyCharacter()
 //		}
 //	}
 //}
+
+void AMyCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (CameraComp)
+	{
+		float TargetFOV = bIsZooming ? ZoomedFOV : DefaultFOV;
+		float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
+		CameraComp->SetFieldOfView(NewFOV);
+	}
+}
 
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -132,6 +148,31 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 					ETriggerEvent::Triggered,
 					this,
 					&AMyCharacter::PerformMeleeAttack
+				);
+			}
+			if (PlayerController->UseHealthItemAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->UseHealthItemAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::StartHealing
+				);
+			}
+			if (PlayerController->ZoomAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->ZoomAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::StartZoom
+				);
+
+				EnhancedInput->BindAction(
+					PlayerController->ZoomAction,
+					ETriggerEvent::Completed,
+					this,
+					&AMyCharacter::StopZoom
 				);
 			}
 		}
@@ -259,4 +300,44 @@ void AMyCharacter::PerformMeleeAttack()
 	}
 	UE_LOG(LogTemp, Warning, TEXT("근접 공격 %f damage!"), MeleeDamage);
 	TakeDamage(MeleeDamage);
+}
+
+void AMyCharacter::StartHealing()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Use Healing item"));
+
+	GetWorldTimerManager().SetTimer(
+		HealingTimerHandle,
+		this,
+		&AMyCharacter::CompleteHealing,
+		3.0f, // 3초 후 실행
+		false
+	);
+
+	for (int i = 1; i <= 3; i++)
+	{
+		FTimerHandle TempHandle;
+		GetWorldTimerManager().SetTimer(
+			TempHandle,
+			[this]() { UE_LOG(LogTemp, Warning, TEXT("healing")); },
+			i,
+			false
+		);
+	}
+}
+
+void AMyCharacter::CompleteHealing()
+{
+	Health = FMath::Min(Health + 20.0f, 100.0f);
+	UE_LOG(LogTemp, Warning, TEXT("healing complete: %f"), Health);
+}
+
+void AMyCharacter::StartZoom()
+{
+	bIsZooming = true;
+}
+
+void AMyCharacter::StopZoom()
+{
+	bIsZooming = false;
 }

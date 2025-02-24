@@ -30,6 +30,10 @@ public:
 	UInputAction* CrouchAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* MeleeAttackAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* UseHealthItemAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* ZoomAction;
 
 protected:
 	virtual void BeginPlay() override;

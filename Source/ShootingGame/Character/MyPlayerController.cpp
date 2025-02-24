@@ -29,11 +29,27 @@ void AMyPlayerController::BeginPlay()
 
 	if (MeleeAttackAction)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MeleeAttackAction is set correctly."));
+		UE_LOG(LogTemp, Warning, TEXT("MeleeAttackAction is set"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("MeleeAttackAction is NULL! Check Input Mapping Context."));
+		UE_LOG(LogTemp, Error, TEXT("MeleeAttackAction is NULL"));
+	}
+	if (UseHealthItemAction)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UseHealthItemAction is set"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("UseHealthItemAction is NULL"));
+	}
+	if (ZoomAction)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ZoomAction is set"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("ZoomAction is NULL"));
 	}
 }
 

@@ -26,6 +26,7 @@ public:
 	UCameraComponent* CameraComp;
 
 protected:
+	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION()
@@ -49,6 +50,8 @@ protected:
 	void TakeDamage(float DamageAmount);
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PerformMeleeAttack();
+	UFUNCTION()
+	void StartHealing();
 
 
 
@@ -58,7 +61,12 @@ private:
 	float SprintSpeed;
 	float CrouchSpeed;
 	float CrouchSpeedMultiplier;
+	float DefaultFOV;
+	float ZoomedFOV = 60.0f;
+	float ZoomInterpSpeed = 10.0f;
 
+
+	UPROPERTY(EditAnywhere, Category = "Health")
 	float Health = 100.0f;
 	float MeleeDamage = 3.0f;
 
@@ -67,4 +75,16 @@ private:
 
 	UPROPERTY()
 	ABaseWeapon* EquippedWeapon;
+
+	FTimerHandle HealingTimerHandle;
+	UFUNCTION()
+	void CompleteHealing();
+
+	UPROPERTY()
+	bool bIsZooming = false;
+
+	UFUNCTION()
+	void StartZoom();
+	UFUNCTION()
+	void StopZoom();
 };
