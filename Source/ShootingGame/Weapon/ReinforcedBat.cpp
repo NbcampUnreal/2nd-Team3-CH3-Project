@@ -6,4 +6,5 @@ AReinforcedBat::AReinforcedBat()
 {
 	this->Damage = 18.0f;
 	this->AttackRate = 3.0f;
+	this->WeaponType = "Bat";
 }

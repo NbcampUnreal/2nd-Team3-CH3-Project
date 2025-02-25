@@ -7,14 +7,20 @@
 
 AMeleeWeapon::AMeleeWeapon()
 {
-
+	USkeletalMesh* MeleeWeapon = LoadObject<USkeletalMesh>(nullptr, TEXT("/Game/Weapons/MeleeWeapon/Knife/SK_M9_Knife_X.SK_M9_Knife_X"));
+	if (MeleeWeapon)
+	{
+		WeaponMesh->SetSkeletalMesh(MeleeWeapon);
+	}
 }
 
 void AMeleeWeapon::Attack()
 {
 	Super::Attack();
-	USkeletalMeshComponent* SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>();
-	SkeletalMesh->OnComponentBeginOverlap.AddDynamic(this, &AMeleeWeapon::OnEnemyOverlap);
+	if (USkeletalMeshComponent* SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>())
+	{
+		SkeletalMesh->OnComponentBeginOverlap.AddDynamic(this, &AMeleeWeapon::OnEnemyOverlap);
+	}
 }
 
 void AMeleeWeapon::OnEnemyOverlap(

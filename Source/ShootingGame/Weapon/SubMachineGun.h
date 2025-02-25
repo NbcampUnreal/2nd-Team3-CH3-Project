@@ -11,4 +11,6 @@ class SHOOTINGGAME_API ASubMachineGun : public AMainWeapon
 	
 public:
 	ASubMachineGun();
+
+	virtual void EquipParts(AParts* Parts) override;
 };

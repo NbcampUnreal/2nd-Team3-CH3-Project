@@ -1,34 +1,49 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Weapon/BaseWeapon.h"
 #include "ThrowableWeapon.generated.h"
 
-class UNiagaraSystem;
+class AThrowableProjectile;
+class USphereComponent;
 
 UCLASS()
-class SHOOTINGGAME_API AThrowableWeapon : public AActor
+class SHOOTINGGAME_API AThrowableWeapon : public ABaseWeapon
 {
 	GENERATED_BODY()
-
+	
 public:
 	AThrowableWeapon();
 
+	UFUNCTION(BlueprintPure, Category = "ThrowableWeapon")
+	virtual int32 GetCurrentPossession() const;
+	virtual int32 GetMaxPossession() const;
+	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
+	virtual void Throw();
+	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
+	virtual void Spawn();
+	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
+	virtual void AddPossession(int32 AddNumber);
+	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
+	virtual void ReadyToExplosion();
+
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
-	USceneComponent* Scene;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
-	USkeletalMeshComponent* WeaponMesh;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UNiagaraSystem* ExplosionEffect;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	USoundBase* PullpinSound;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	USoundBase* ExplosionSound;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ThrowableWeapon")
+	USphereComponent* LocationCheck;
+	UPROPERTY();
+	AThrowableProjectile* ThrowableProjectile;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ThrowableWeapon")
+	TSubclassOf<AThrowableProjectile> ThrowableProjectileClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ThrowableWeapon")
+	int32 MaxPossession;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ThrowableWeapon")
+	int32 CurrentPossession;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ThrowableWeapon")
+	float ThrowForce;
 
-	float Damage;
+	bool bIsInHand;
 
-
+	FTimerHandle ReloadTimerHandle;
 
 };

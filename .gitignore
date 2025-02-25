@@ -24,3 +24,5 @@ Saved/
 # Visual Studio cache
 .vs/
 *.ipch
+Content/Maps/SW_TEST.umap
+Content/DefaultCharacter/Blueprints/BP_SWDefaultCharacter1.uasset

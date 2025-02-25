@@ -40,11 +40,8 @@ protected:
 	float Damage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|WeaponStat")
 	float AttackRate;
-
+	UPROPERTY(BlueprintReadOnly, Category = "WeaponStat")
 	bool bIsCooltimeEnd;
-	float CurrentAttackTime;
-	float LastAttackTime;
-
 
 	virtual void AttachWeaponToCharacter(ADefaultCharacter* PlayerCharacter);
 

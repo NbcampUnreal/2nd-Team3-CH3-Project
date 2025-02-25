@@ -4,7 +4,6 @@
 #include "Default/DefaultCharacter.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
-#include "HAL/PlatformTime.h"
 #include "Kismet/GameplayStatics.h"
 
 ABaseWeapon::ABaseWeapon()
@@ -24,15 +23,11 @@ ABaseWeapon::ABaseWeapon()
 
 	PrimaryActorTick.bCanEverTick = false;
 
-	CurrentAttackTime = 0.0f;
-	LastAttackTime = 0.0f;
+	bIsCooltimeEnd = true;	// 발사 간격 체크
 
-	bIsCooltimeEnd = true;
-
-	WeaponType = "";
-	Damage = 0.0f;
-
-	AttackRate = 5.0f;
+	WeaponType = "";		// 무기 종류
+	Damage = 0.0f;			// 데미지
+	AttackRate = 5.0f;		// 발사 간격
 }
 
 
@@ -54,7 +49,7 @@ void ABaseWeapon::Attack()
 	}
 }
 
-void ABaseWeapon::DealDamage(AActor* Enemy)
+void ABaseWeapon::DealDamage(AActor* Enemy) // Attack또는 프로젝타일에서 액터 판별 후 호출됨
 {
 	if (Enemy)
 	{

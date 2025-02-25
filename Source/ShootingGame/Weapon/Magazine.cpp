@@ -10,14 +10,6 @@ AMagazine::AMagazine()
 	MagazineCapacity = 30;
 }
 
-void AMagazine::AttachMagToWeapon(AFirearm* Weapon)
-{
-	if (Weapon)
-	{
-		this->AttachToComponent(Weapon->WeaponMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MagazineSocket"));
-	}
-}
-
 int32 AMagazine::GetMagazineCapacity() const
 {
 	return MagazineCapacity;

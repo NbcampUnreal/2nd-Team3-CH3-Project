@@ -6,4 +6,5 @@ AKnife::AKnife()
 {
 	this->Damage = 10.0f;
 	this->AttackRate = 1.5f;
+	this->WeaponType = "Knife";
 }

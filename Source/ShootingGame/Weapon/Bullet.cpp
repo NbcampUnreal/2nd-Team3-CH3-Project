@@ -35,6 +35,8 @@ void ABullet::ActivateBullet(FVector SpawnLocation, FRotator SpawnRotation, floa
 	{
 		projectileMovement->InitialSpeed = Speed;
 		projectileMovement->MaxSpeed = Speed;
+		projectileMovement->Velocity = SpawnRotation.Vector() * Speed;
+		projectileMovement->SetUpdatedComponent(bulletMesh);
 	}
 }
 
@@ -69,6 +71,12 @@ void ABullet::onHit(
 {
 	if (gun)
 	{
+		if (OtherActor != gun)
+		{
+			SetActorHiddenInGame(true);
+			SetActorEnableCollision(false);
+		}
+
 		if (OtherActor && OtherActor != this)
 		{
 			gun->DealDamage(OtherActor);

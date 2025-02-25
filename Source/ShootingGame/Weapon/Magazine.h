@@ -14,8 +14,6 @@ class SHOOTINGGAME_API AMagazine : public AParts
 public:
 	AMagazine();
 
-	virtual void AttachMagToWeapon(AFirearm* Weapon);
-
 	UFUNCTION(BlueprintPure, Category = "Magazine")
 	virtual int32 GetMagazineCapacity() const;
 
