@@ -3,23 +3,32 @@
 #include "Firearm.h"
 #include "Weapon/Bullet.h"
 #include "Weapon/Magazine.h"
+#include "Weapon/Suppressor.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 AFirearm::AFirearm()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	BulletMesh = nullptr;
-	BulletSpeed = 3000.0f;
-	MaxAmmo = 200;
-	CurrentAmmo = 0;
-	MaxReloadedAmmo = 0;
-	ReloadedAmmo = 0;
-	ReloadTime = 1.0f;
-	bIsLoadingComplete = true;
-	bIsMagazineAttached = false;
+	BulletMesh = nullptr;										// 프로젝타일에 전달할 탄환 메쉬
+	Bullet = nullptr;											// 사용할 프로젝타일 클래스
+	Suppressor = nullptr;										// 소음기 클래스
+	CrosshairTexture = nullptr;									// 조준십자 텍스쳐
+	BulletSpeed = 3000.0f;										// 프로젝타일에 전달할 탄 스피드
+	MaxAmmo = 200;												// 최대 탄 소지량
+	CurrentAmmo = 0;											// 현재 탄 소지량
+	MaxReloadedAmmo = 0;										// 최대 장전 탄수
+	ReloadedAmmo = 0;											// 현재 장전 탄수
+	ReloadTime = 1.0f;											// 재장전 소요시간
+	OriginalAccuracy = 1.0f;									// 명중률 (0.1 ~ 1.0)
+	MaxSpreadAngle = 10.0f;										// 탄퍼짐 최대각도
+	FinalAccuracy = MaxSpreadAngle * (1 - OriginalAccuracy);	// 보정된 명중률
+	bIsLoadingComplete = true;									// 재장전 중 여부
+	bIsMagazineAttached = false;								// 탄창 결합 여부
+	bIsSuppressorInstalled = false;								// 소음기 결합 여부
 }
 
 void AFirearm::Attack()
@@ -28,9 +37,9 @@ void AFirearm::Attack()
 	{
 		if (bIsCooltimeEnd)
 		{
-			if (AttackNiagara)
+			if (AttackNiagara && !bIsSuppressorInstalled)
 			{
-				UNiagaraComponent* AttackEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(
+				UNiagaraComponent* AttackEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(		// 격발 효과
 					AttackNiagara,
 					WeaponMesh,
 					TEXT("MuzzleSocket"),
@@ -41,10 +50,32 @@ void AFirearm::Attack()
 				);
 			}
 
+			else if (AttackNiagara && bIsSuppressorInstalled)
+			{
+				UStaticMeshComponent* SuppressorMeshComponent = Suppressor->FindComponentByClass<UStaticMeshComponent>();
+				UNiagaraComponent* AttackEffect = UNiagaraFunctionLibrary::SpawnSystemAttached(		// 소음기 격발 효과
+					SuppressorFireNiagara,
+					SuppressorMeshComponent,
+					TEXT("SuppressorMuzzleSocket"),
+					FVector::ZeroVector,
+					FRotator::ZeroRotator,
+					EAttachLocation::SnapToTarget,
+					true
+				);
+				
+				this->AttackSound = SuppressorSound;
+			}
+
 			Fire();
+
+			if (FireAnim)
+			{
+				WeaponMesh->PlayAnimation(FireAnim, false);	// 격발 애니메이션
+			}
 
 			ReloadedAmmo--;
 		}
+
 		Super::Attack();
 	}
 
@@ -52,32 +83,85 @@ void AFirearm::Attack()
 	{
 		if (EmptyAmmoSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyAmmoSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyAmmoSound, GetActorLocation());	// 빈총 격발음
 		}
 	}
 
 }
 
-int32 AFirearm::GetCurrentAmmoValue() const
+void AFirearm::Fire()
 {
-	return CurrentAmmo;
+	if (BulletClass)
+	{
+		FVector SpawnLocation = GetActorLocation();
+		FRotator SpawnRotation = GetActorRotation();
+		
+		if (WeaponMesh && WeaponMesh->DoesSocketExist("MuzzleSocket"))
+		{
+			SpawnLocation = WeaponMesh->GetSocketLocation("MuzzleSocket");
+			SpawnRotation = WeaponMesh->GetSocketRotation("MuzzleSocket");
+
+		}
+		FinalAccuracy = MaxSpreadAngle * (1 - OriginalAccuracy);
+		FVector BaseDirection = SpawnRotation.Vector();
+		FVector SpreadDirection = FMath::VRandCone(BaseDirection, FMath::DegreesToRadians(FinalAccuracy));
+		FRotator FinalRotation = SpreadDirection.Rotation();
+
+
+		if (BulletPool.Num() > 0)
+		{
+			Bullet = BulletPool.Pop();
+			if (Bullet && Bullet->IsValidLowLevel())
+			{
+				Bullet->ActivateBullet(SpawnLocation, FinalRotation, BulletSpeed);
+			}
+		}
+
+		else
+		{		
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			Bullet = GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, FinalRotation, SpawnParams);
+	
+			if (!Bullet)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Bullet spawn failed!"));
+				return;
+			}
+		}
+
+		if (Bullet)
+		{
+			Bullet->SetFirearm(this);	
+			Bullet->SetBulletMesh(BulletMesh);	
+			Bullet->SetBulletSpeed(BulletSpeed);		
+		}
+	}
 }
 
-void AFirearm::AddAmmo(int32 AmmoToAdd)
+void AFirearm::BeginPlay()
 {
-	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MaxAmmo);
+	Super::BeginPlay();
+
+	OriginalAttackSound = AttackSound;	// 소음기 탈부착 대비 사운드 저장
 }
 
 void AFirearm::Reload()
 {
 	if (bIsLoadingComplete && bIsMagazineAttached)
 	{
+		if (CurrentAmmo <= 0)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadFailSound, GetActorLocation());
+			return;
+		}
+		
 		if (ReloadSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetActorLocation());	// 재장전 효과음
 		}
 		bIsLoadingComplete = false;
-		GetWorldTimerManager().SetTimer(
+		GetWorldTimerManager().SetTimer(														// 재장전 시간 소요 후 재장전 처리
 			ReloadTimerHandle,
 			[this]() {
 				int32 ReloadValue = FMath::Min(MaxReloadedAmmo - ReloadedAmmo, CurrentAmmo);
@@ -91,7 +175,22 @@ void AFirearm::Reload()
 	}
 }
 
-void AFirearm::EquipParts(AParts* Parts)
+int32 AFirearm::GetCurrentAmmoValue() const
+{
+	return CurrentAmmo;
+}
+
+float AFirearm::GetFinalAccuracty() const
+{
+	return 1 - FinalAccuracy;
+}
+
+void AFirearm::AddAmmo(int32 AmmoToAdd)
+{
+	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MaxAmmo);
+}
+
+void AFirearm::EquipParts(AParts* Parts) // 파츠를 파츠에 저장된 소켓명에 따라 먼저 소켓에 부착 후 클래스 판별하여 기능 적용
 {
 	if (Parts)
 	{
@@ -105,53 +204,21 @@ void AFirearm::EquipParts(AParts* Parts)
 			ReloadedAmmo = MaxReloadedAmmo;
 			bIsMagazineAttached = true;
 		}
-	}
-}
 
-void AFirearm::Fire()
-{
-	if (BulletClass)
-	{
-		FVector SpawnLocation = GetActorLocation();
-		FRotator SpawnRotation = GetActorRotation();
-
-		ABullet* Bullet = nullptr;
-
-		if (bulletPool.Num() > 0)
+		if (Parts->IsA(ASuppressor::StaticClass()))
 		{
-			Bullet = bulletPool.Pop();
-			if (Bullet)
-			{
-				Bullet->ActivateBullet(SpawnLocation, SpawnRotation, BulletSpeed);
-			}
-		}
-
-		else
-		{
-			if (BulletClass)
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.Owner = this;
-
-				Bullet->SetBulletSpeed(BulletSpeed);
-				Bullet = GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, SpawnRotation, SpawnParams);
-			}
-		}
-
-		if (Bullet)
-		{
-			Bullet->SetFirearm(this);	
-			Bullet->SetBulletMesh(BulletMesh);	
+			Suppressor = Cast<ASuppressor>(Parts);
+			bIsSuppressorInstalled = true;
 		}
 	}
 }
 
-void AFirearm::ReturnBulletToPool(ABullet* UsedBullet)
+void AFirearm::ReturnBulletToPool(ABullet* UsedBullet) // 프로젝타일 액터 재사용 함수
 {
-	bulletPool.Add(UsedBullet);
+	BulletPool.Add(UsedBullet);
 }
 
-void AFirearm::DetachParts(FName SocketName)
+void AFirearm::DetachParts(FName SocketName) // 파츠 결합 전 기존 파트 분리
 {
 	TArray<AActor*> AttachedActors;
 	this->GetAttachedActors(AttachedActors);
@@ -161,13 +228,21 @@ void AFirearm::DetachParts(FName SocketName)
 		if (Actor && Actor->GetAttachParentSocketName() == SocketName)
 		{
 			Actor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			return;
+			Actor->AddActorLocalOffset(FVector(0.0f, 0.0f, -10.0f));	
+			break;
 		}
 	}	
 
-	if (SocketName == "MagazineSocket")
+	if (SocketName == FName(TEXT("MagazineSocket")))
 	{
 		MaxReloadedAmmo = 0;
 		bIsMagazineAttached = false;
+	}
+
+	if (SocketName == FName(TEXT("MuzzleSocket")))
+	{
+		Suppressor = nullptr;
+		bIsSuppressorInstalled = false;
+		this->AttackSound = OriginalAttackSound;
 	}
 }

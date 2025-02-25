@@ -20,6 +20,4 @@ protected:
 	USceneComponent* Scene;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component")
 	UStaticMeshComponent* PartsMesh;
-
-
 };

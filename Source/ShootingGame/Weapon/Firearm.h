@@ -7,6 +7,7 @@
 class AMagazine;
 class ABullet;
 class AParts;
+class ASuppressor;
 
 UCLASS()
 class SHOOTINGGAME_API AFirearm : public ABaseWeapon
@@ -16,12 +17,18 @@ class SHOOTINGGAME_API AFirearm : public ABaseWeapon
 public:
 	AFirearm();
 
-	UPROPERTY(EditDefaultsOnly, Category = "Bullet")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Bullet")
 	UStaticMesh* BulletMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Component")
 	USoundBase* ReloadSound;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Component")
 	USoundBase* EmptyAmmoSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Component")
+	USoundBase* ReloadFailSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Component")
+	UAnimSequence* FireAnim;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Crosshair")
+	UTexture2D* CrosshairTexture;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void EquipParts(AParts* Parts);
@@ -33,11 +40,21 @@ public:
 	virtual int32 GetCurrentAmmoValue() const;
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void DetachParts(FName SocketName);
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	virtual float GetFinalAccuracty() const;
 
 	virtual void Attack() override;
 
 protected:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Component")
+	UNiagaraSystem* SuppressorFireNiagara;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	USoundBase* SuppressorSound;
+	UPROPERTY()
+	ABullet* Bullet;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
+	TSubclassOf<ABullet> BulletClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
 	float BulletSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
@@ -50,17 +67,26 @@ protected:
 	int32 ReloadedAmmo;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
 	float ReloadTime;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet", meta = (ClampMin = "0.1", ClampMax = "1.0", UIMin ="0.1", UIMax = "1.0"))
+	float OriginalAccuracy;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Bullet")
+	float MaxSpreadAngle;
 
+	float FinalAccuracy;
 	bool bIsLoadingComplete;
-	TSubclassOf<ABullet> BulletClass;
+	bool bIsMagazineAttached;
+	bool bIsSuppressorInstalled;
+
 	FTimerHandle ReloadTimerHandle;
+	TArray<ABullet*> BulletPool;
+	ASuppressor* Suppressor;
+	USoundBase* OriginalAttackSound;
+
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Reload();
 	UFUNCTION()
 	virtual void Fire();
+	virtual void BeginPlay() override;
 
-private:
-	TArray<ABullet*> bulletPool;
-	bool bIsMagazineAttached;
 };

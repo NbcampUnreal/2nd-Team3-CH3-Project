@@ -12,6 +12,5 @@ class SHOOTINGGAME_API ARifle : public AMainWeapon
 public:
 	ARifle();
 
-protected:
-
+	virtual void EquipParts(AParts* Parts) override;
 };
