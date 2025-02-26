@@ -61,6 +61,9 @@ protected:
 	void OnDeath();
 	virtual Item* DropItem();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
+	UAnimMontage* ReactionHitMontage;
+
 	/** 몬스터 사망 애니메이션 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
 	UAnimMontage* DeathMontage;

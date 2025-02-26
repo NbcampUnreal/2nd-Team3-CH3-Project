@@ -82,6 +82,17 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 	{
 		OnDeath();
 	}
+	else
+	{
+		if (ReactionHitMontage)
+		{
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Play(ReactionHitMontage);
+			}
+		}
+	}
 
 	return ActualDamage;
 }
