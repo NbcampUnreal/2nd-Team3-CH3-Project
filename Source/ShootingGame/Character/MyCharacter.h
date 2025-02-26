@@ -9,6 +9,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class ABaseWeapon;
+class UChildActorComponent;
 
 struct FInputActionValue;
 
@@ -49,8 +50,17 @@ protected:
 	bool GetIsCrouching() const;
 
 	UFUNCTION()
-	void TakeDamage(float DamageAmount);
+	void CharacterTakeDamage(float DamageAmount);
+	UFUNCTION()
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		AController* EventInstigator,
+		AActor* DamageCauser) override;
 	UFUNCTION(BlueprintCallable, Category = "Combat")
+
+	void OnPlayerDeath();
+
 	void PerformMeleeAttack();
 	UFUNCTION()
 	void StartHealing();
@@ -58,6 +68,11 @@ protected:
 	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Movement")
 	bool bIsCrouching;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* WeaponSlot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	ABaseWeapon* EquippedWeapon;
 
 
 private:
@@ -78,8 +93,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TSubclassOf<ABaseWeapon> DefaultWeaponClass;
 
-	UPROPERTY()
-	ABaseWeapon* EquippedWeapon;
 
 	FTimerHandle HealingTimerHandle;
 	UFUNCTION()

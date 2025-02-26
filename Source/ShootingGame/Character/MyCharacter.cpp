@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/ChildActorComponent.h"
 
 AMyCharacter::AMyCharacter()
 {
@@ -40,6 +41,11 @@ AMyCharacter::AMyCharacter()
 	{
 		DefaultFOV = CameraComp->FieldOfView;
 	}
+
+	// Weapon ChildActorComponent 설정
+	WeaponSlot = CreateDefaultSubobject<UChildActorComponent>(TEXT("WeaponSlot"));
+	WeaponSlot->SetupAttachment(GetMesh(), TEXT("RightHand")); // Skeletal Mesh의 Slot 이름
+	//WeaponSlot->SetChildActorClass(DefaultWeaponClass); // 기본 무기 클래스 설정
 }
 
 //void AMyCharacter::BeginPlay()
@@ -145,7 +151,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 				UE_LOG(LogTemp, Warning, TEXT("Binding MeleeAttackAction to PerformMeleeAttack"));
 				EnhancedInput->BindAction(
 					PlayerController->MeleeAttackAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&AMyCharacter::PerformMeleeAttack
 				);
@@ -265,14 +271,14 @@ void AMyCharacter::StopCrouch(const FInputActionValue& value)
 	}
 }
 
-void AMyCharacter::TakeDamage(float DamageAmount)
+void AMyCharacter::CharacterTakeDamage(float DamageAmount)
 {
 	Health -= DamageAmount;
 	Health = FMath::Max(Health, 0.0f);
 	UE_LOG(LogTemp, Warning, TEXT("체력: %f"), Health);
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("체력: %f"), Health));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
 	}
 	else
 	{
@@ -280,31 +286,54 @@ void AMyCharacter::TakeDamage(float DamageAmount)
 	}
 }
 
+float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	CharacterTakeDamage(ActualDamage);
+
+	return ActualDamage;
+}
+
+void AMyCharacter::OnPlayerDeath()
+{
+	// TO DO : Character Death Behavior or Show Finish Widget
+	
+}
+
 void AMyCharacter::PerformMeleeAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("PerformMeleeAttack")); // 실행 확인용 로그
 
-	if (EquippedWeapon)
+	if (WeaponSlot)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Using"));
-		EquippedWeapon->Attack();
+		// TO DO : Equipped Weapon Type 별 캐스팅 분리 or 액션 분리
 
-		// 자기 자신에게 데미지 적용 (테스트용)
-		TakeDamage(EquippedWeapon->GetDamageValue());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Weapon"));
-	}
-	if (EquippedWeapon)
-	{
-		EquippedWeapon->Attack();
+		ABaseWeapon* equippedWeapon = Cast<ABaseWeapon>(WeaponSlot->GetChildActor());
+		//EquippedWeapon = Cast<ABaseWeapon>(Weapon->GetChildActor());
+		if (equippedWeapon)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
+			equippedWeapon->Attack(); // 무기의 Attack 함수 호출
 
-		// 자기 자신에게 데미지 적용 (테스트용)
-		TakeDamage(EquippedWeapon->GetDamageValue());
+			// 자기 자신에게 데미지 적용 (테스트용)
+			//CharacterTakeDamage(mainWeapon->GetDamageValue());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("No Weapon Equipped"));
+		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("근접 공격 %f damage!"), MeleeDamage);
-	TakeDamage(MeleeDamage);
+
+	//if (EquippedWeapon)
+	//{
+	//	EquippedWeapon->Attack();
+
+	//	// 자기 자신에게 데미지 적용 (테스트용)
+	//	TakeDamage(EquippedWeapon->GetDamageValue());
+	//}
+	//UE_LOG(LogTemp, Warning, TEXT("근접 공격 %f damage!"), MeleeDamage);
+	//TakeDamage(MeleeDamage);
 }
 
 void AMyCharacter::StartHealing()
