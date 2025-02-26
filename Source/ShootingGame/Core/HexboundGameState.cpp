@@ -15,7 +15,7 @@ void AHexboundGameState::BeginPlay()
 	Super::BeginPlay();
 
 	Init();
-	OnGameStart();
+	//OnGameStart();
 }
 
 void AHexboundGameState::Init()

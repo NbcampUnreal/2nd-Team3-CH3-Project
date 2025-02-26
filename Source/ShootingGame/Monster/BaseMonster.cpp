@@ -1,7 +1,9 @@
 #include "Monster/BaseMonster.h"
 #include "MonsterAIController.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Animation/AnimInstance.h"
 
 // Sets default values
 ABaseMonster::ABaseMonster()
@@ -16,6 +18,7 @@ ABaseMonster::ABaseMonster()
 
 	MaxHealth = 100.0f;
 	Health = MaxHealth;
+	isDeath = false;
 
 }
 
@@ -27,6 +30,11 @@ FName ABaseMonster::GetMonsterType()
 float ABaseMonster::GetHealth() const
 {
 	return Health;
+}
+
+bool ABaseMonster::IsCharacterDeath()
+{
+	return isDeath;
 }
 
 void ABaseMonster::BeginPlay()
@@ -81,15 +89,42 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 void ABaseMonster::OnDeath()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster OnDeath")));
-	//UE_LOG(LogTemp, Warning, TEXT("Monster OnDeath"));
+	isDeath = true;
 
-	DropItem();
+	AMonsterAIController* AIController = Cast<AMonsterAIController>(GetController());
+	if (AIController)
+	{
+		AIController->UnPossess(); // AI 컨트롤러 비활성화
+	}
 
-	Destroy();
+	if (DeathMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &ABaseMonster::OnDeathMontageEnded);
+
+			AnimInstance->Montage_Play(DeathMontage);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate);
+			return;
+		}
+	}
 }
 
 Item* ABaseMonster::DropItem()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Drop Item!!!")));
 	return nullptr;
 }
 
+void ABaseMonster::OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == DeathMontage)
+	{
+		DropItem();
+
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Try Destroy Monster")));
+		Destroy();
+	}
+}

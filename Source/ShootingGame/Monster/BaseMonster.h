@@ -24,6 +24,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Monster|Health")
 	float GetHealth() const;
 
+	UFUNCTION(BlueprintCallable)
+	bool IsCharacterDeath();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -58,4 +61,14 @@ protected:
 	void OnDeath();
 	virtual Item* DropItem();
 
+	/** 몬스터 사망 애니메이션 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
+	UAnimMontage* DeathMontage;
+
+	/** 애니메이션 종료 시 호출될 함수 */
+	UFUNCTION()
+	void OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+private:
+	bool isDeath;
 };
