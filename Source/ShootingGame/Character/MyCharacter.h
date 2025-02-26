@@ -45,6 +45,8 @@ protected:
 	void StartCrouch(const FInputActionValue& value);
 	UFUNCTION()
 	void StopCrouch(const FInputActionValue& value);
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	bool GetIsCrouching() const;
 
 	UFUNCTION()
 	void TakeDamage(float DamageAmount);
@@ -52,6 +54,9 @@ protected:
 	void PerformMeleeAttack();
 	UFUNCTION()
 	void StartHealing();
+
+	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Movement")
+	bool bIsCrouching;
 
 
 

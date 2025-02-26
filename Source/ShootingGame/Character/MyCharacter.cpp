@@ -32,7 +32,7 @@ AMyCharacter::AMyCharacter()
 	CrouchSpeed = NormalSpeed * CrouchSpeedMultiplier;
 
 	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 
 	bUseControllerRotationYaw = true;
 
@@ -185,16 +185,21 @@ void AMyCharacter::Move(const FInputActionValue& value)
 
 	const FVector2D MoveInput = value.Get<FVector2D>();
 
+	if (MoveInput.IsNearlyZero()) return;
+
 	// 카메라의 회전 정보 가져오기
 	const FRotator CameraRotation = CameraComp->GetComponentRotation();
-	const FRotator YawRotation(0.f, CameraRotation.Yaw, 0.f); // Pitch와 Roll을 제거하고 Yaw만 사용
+	const FRotator YawRotation(0.f, CameraRotation.Yaw, 0.f); // Pitch와 Roll 제거, Yaw만 유지
+
+	// 캐릭터가 항상 카메라 방향을 보게 설정
+	SetActorRotation(YawRotation);
 
 	// 카메라 기준의 전/후 방향
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	// 카메라 기준의 좌/우 방향
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	// 이동 입력 적용 (카메라 방향 기준)
+	// 이동 입력 적용
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
 		AddMovementInput(ForwardDirection, MoveInput.X);
@@ -203,16 +208,6 @@ void AMyCharacter::Move(const FInputActionValue& value)
 	{
 		AddMovementInput(RightDirection, MoveInput.Y);
 	}
-
-	/*const FVector2D MoveInput = value.Get<FVector2D>();
-	if (!FMath::IsNearlyZero(MoveInput.X))
-	{
-		AddMovementInput(GetActorForwardVector(), MoveInput.X);
-	}
-	if (!FMath::IsNearlyZero(MoveInput.Y))
-	{
-		AddMovementInput(GetActorRightVector(), MoveInput.Y);
-	}*/
 }
 void AMyCharacter::StartJump(const FInputActionValue& value)
 {
@@ -249,14 +244,24 @@ void AMyCharacter::StopSprint(const FInputActionValue& value)
 }
 void AMyCharacter::StartCrouch(const FInputActionValue& value)
 {
-	if (GetCharacterMovement()) {
-		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+	if (!bIsCrouching)
+	{
+		Crouch();
+		bIsCrouching = true;
+		if (GetCharacterMovement()) {
+			GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+		}
 	}
 }
 void AMyCharacter::StopCrouch(const FInputActionValue& value)
 {
-	if (GetCharacterMovement()) {
-		GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
+	if (bIsCrouching)
+	{
+		UnCrouch();
+		bIsCrouching = false;
+		if (GetCharacterMovement()) {
+			GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
+		}
 	}
 }
 
@@ -340,4 +345,9 @@ void AMyCharacter::StartZoom()
 void AMyCharacter::StopZoom()
 {
 	bIsZooming = false;
+}
+
+bool AMyCharacter::GetIsCrouching() const
+{
+	return bIsCrouching;
 }
