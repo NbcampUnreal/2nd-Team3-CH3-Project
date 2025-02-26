@@ -4,8 +4,7 @@
 #include "GameFramework/Character.h"
 #include "BaseMonster.generated.h"
 
-class USpringArmComponent;
-class UCameraComponent;
+class UChildActorComponent;
 class Item;
 
 UCLASS()
@@ -17,6 +16,9 @@ public:
 	ABaseMonster();
 
 	FName GetMonsterType();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Component")
+	UChildActorComponent* HandSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Component")
 	UPrimitiveComponent* HitCollision;
@@ -58,9 +60,11 @@ protected:
 		AActor* DamageCauser) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Monster|Health")
-	void OnDeath();
+	virtual void OnDeath();
+
 	virtual Item* DropItem();
 
+	/** 몬스터 데미지 받았을때 애니메이션 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
 	UAnimMontage* ReactionHitMontage;
 
@@ -68,10 +72,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
 	UAnimMontage* DeathMontage;
 
-	/** 애니메이션 종료 시 호출될 함수 */
+	/** 사망 후 호출될 함수 */
 	UFUNCTION()
 	void OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
-private:
 	bool isDeath;
 };

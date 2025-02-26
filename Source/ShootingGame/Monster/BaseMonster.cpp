@@ -4,15 +4,21 @@
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Animation/AnimInstance.h"
+#include "Components/ChildActorComponent.h"
 
 // Sets default values
 ABaseMonster::ABaseMonster()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	MonsterType = "BaseMonster";
+
+	HandSocket = CreateDefaultSubobject<UChildActorComponent>(TEXT("HandSocket"));
+	HandSocket->SetupAttachment(GetMesh(), TEXT("RightHand")); // 캐릭터 메시의 소켓 이름
+
 	HitCollision = CreateDefaultSubobject<USphereComponent>(TEXT("HitCollision"));
 	HitCollision->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-	HitCollision->SetupAttachment(GetMesh());
+	HitCollision->SetupAttachment(HandSocket);
 
 	HitCollision->OnComponentBeginOverlap.AddDynamic(this, &ABaseMonster::OnHitCollisionOverlap);
 
@@ -65,8 +71,9 @@ void ABaseMonster::OnHitCollisionOverlap(UPrimitiveComponent* OverlappedComp, AA
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Overlap!!")));
-		//UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr, this, UDamageType::StaticClass());
-		UGameplayStatics::ApplyDamage(this, 10.0f, nullptr, this, UDamageType::StaticClass());
+		UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr, this, UDamageType::StaticClass());
+
+		//UGameplayStatics::ApplyDamage(this, 10.0f, nullptr, this, UDamageType::StaticClass());
 	}
 }
 
@@ -74,7 +81,7 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	Health = FMath::Clamp(Health - DamageAmount, 0.0f, MaxHealth);
+	Health = FMath::Clamp(Health - ActualDamage, 0.0f, MaxHealth);
 
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster Health decreased to: %f"), Health));
 
