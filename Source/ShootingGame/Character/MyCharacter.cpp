@@ -10,6 +10,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/ChildActorComponent.h"
 
+#include "Core/HexboundGameInstance.h"
+#include "Managers/UIManager.h"
+
 AMyCharacter::AMyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -75,116 +78,8 @@ void AMyCharacter::Tick(float DeltaTime)
 	}
 }
 
-void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		if (AMyPlayerController* PlayerController = Cast<AMyPlayerController>(GetController()))
-		{
-			if (PlayerController->MoveAction)
-			{
-				EnhancedInput->BindAction(
-					PlayerController->MoveAction,
-					ETriggerEvent::Triggered,
-					this,
-					&AMyCharacter::Move
-				);
-			}
-			if (PlayerController->JumpAction)
-			{
-				EnhancedInput->BindAction(
-					PlayerController->JumpAction,
-					ETriggerEvent::Triggered,
-					this,
-					&AMyCharacter::StartJump
-				);
-				EnhancedInput->BindAction(
-					PlayerController->MoveAction,
-					ETriggerEvent::Completed,
-					this,
-					&AMyCharacter::StopJump
-				);
-			}
-			if (PlayerController->LookAction)
-			{
-				EnhancedInput->BindAction(
-					PlayerController->LookAction,
-					ETriggerEvent::Triggered,
-					this,
-					&AMyCharacter::Look
-				);
-			}
-			if (PlayerController->SprintAction)
-			{
-				EnhancedInput->BindAction(
-					PlayerController->SprintAction,
-					ETriggerEvent::Triggered,
-					this,
-					&AMyCharacter::StartSprint
-				);
-				EnhancedInput->BindAction(
-					PlayerController->SprintAction,
-					ETriggerEvent::Completed,
-					this,
-					&AMyCharacter::StopSprint
-				);
-			}
-			if (PlayerController->CrouchAction)
-			{
-				EnhancedInput->BindAction(
-					PlayerController->CrouchAction,
-					ETriggerEvent::Triggered,
-					this,
-					&AMyCharacter::StartCrouch
-				);
-				EnhancedInput->BindAction(
-					PlayerController->CrouchAction,
-					ETriggerEvent::Completed,
-					this,
-					&AMyCharacter::StopCrouch
-				);
-			}
-			if (PlayerController->MeleeAttackAction)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Binding MeleeAttackAction to PerformMeleeAttack"));
-				EnhancedInput->BindAction(
-					PlayerController->MeleeAttackAction,
-					ETriggerEvent::Started,
-					this,
-					&AMyCharacter::PerformMeleeAttack
-				);
-			}
-			if (PlayerController->UseHealthItemAction)
-			{
-				EnhancedInput->BindAction(
-					PlayerController->UseHealthItemAction,
-					ETriggerEvent::Started,
-					this,
-					&AMyCharacter::StartHealing
-				);
-			}
-			if (PlayerController->ZoomAction)
-			{
-				EnhancedInput->BindAction(
-					PlayerController->ZoomAction,
-					ETriggerEvent::Started,
-					this,
-					&AMyCharacter::StartZoom
-				);
-
-				EnhancedInput->BindAction(
-					PlayerController->ZoomAction,
-					ETriggerEvent::Completed,
-					this,
-					&AMyCharacter::StopZoom
-				);
-			}
-		}
-	}
-}
-
+#pragma region Character Movement
+// ======================  캐릭터 이동관련  ===========================
 void AMyCharacter::Move(const FInputActionValue& value)
 {
 	if (!Controller || !CameraComp) return;
@@ -271,36 +166,15 @@ void AMyCharacter::StopCrouch(const FInputActionValue& value)
 	}
 }
 
-void AMyCharacter::CharacterTakeDamage(float DamageAmount)
+bool AMyCharacter::GetIsCrouching() const
 {
-	Health -= DamageAmount;
-	Health = FMath::Max(Health, 0.0f);
-	UE_LOG(LogTemp, Warning, TEXT("체력: %f"), Health);
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("NULL"));
-	}
+	return bIsCrouching;
 }
 
-float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-{
-	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+#pragma endregion
 
-	CharacterTakeDamage(ActualDamage);
-
-	return ActualDamage;
-}
-
-void AMyCharacter::OnPlayerDeath()
-{
-	// TO DO : Character Death Behavior or Show Finish Widget
-	
-}
-
+#pragma region Zoom & Attack
+// ======================  캐릭터 공격, 줌  ===========================
 void AMyCharacter::PerformMeleeAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("PerformMeleeAttack")); // 실행 확인용 로그
@@ -316,8 +190,6 @@ void AMyCharacter::PerformMeleeAttack()
 			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
 			equippedWeapon->Attack(); // 무기의 Attack 함수 호출
 
-			// 자기 자신에게 데미지 적용 (테스트용)
-			//CharacterTakeDamage(mainWeapon->GetDamageValue());
 		}
 		else
 		{
@@ -325,18 +197,45 @@ void AMyCharacter::PerformMeleeAttack()
 		}
 	}
 
-	//if (EquippedWeapon)
-	//{
-	//	EquippedWeapon->Attack();
-
-	//	// 자기 자신에게 데미지 적용 (테스트용)
-	//	TakeDamage(EquippedWeapon->GetDamageValue());
-	//}
-	//UE_LOG(LogTemp, Warning, TEXT("근접 공격 %f damage!"), MeleeDamage);
-	//TakeDamage(MeleeDamage);
 }
 
-void AMyCharacter::StartHealing()
+void AMyCharacter::StartZoom()
+{
+	bIsZooming = true;
+}
+
+void AMyCharacter::StopZoom()
+{
+	bIsZooming = false;
+}
+
+#pragma endregion
+
+void AMyCharacter::TryEquipMainWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Try Equip Main Weapon"));
+
+}
+
+void AMyCharacter::TryEquipSubWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Try Equip Sub Weapon"));
+
+}
+
+void AMyCharacter::TryEquipMeleeWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Try Equip Melee Weapon"));
+
+}
+
+void AMyCharacter::TryEquipThrowableWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Try Equip Throwable Weapon"));
+
+}
+
+void AMyCharacter::TryUseHealingItem()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Use Healing item"));
 
@@ -366,17 +265,311 @@ void AMyCharacter::CompleteHealing()
 	UE_LOG(LogTemp, Warning, TEXT("healing complete: %f"), Health);
 }
 
-void AMyCharacter::StartZoom()
+void AMyCharacter::OnInputInventoryKey()
 {
-	bIsZooming = true;
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+		if (HexboundGameInstance == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find Hexbound GameInstance"));
+			return;
+		}
+
+		UUIManager* UIManager = GetGameInstance()->GetSubsystem<UUIManager>();
+		if (UIManager == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find UIManager"));
+			return;
+		}
+
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+		{
+			AMyPlayerController* MyPlayerController = Cast<AMyPlayerController>(PlayerController);
+
+			if (bIsShowInventory)
+			{
+				UIManager->HideUI(EHUDState::Inventory);
+				UE_LOG(LogTemp, Warning, TEXT("Hide Inventory UI"));
+				MyPlayerController->ShowCursor(false);
+			}
+			else
+			{
+				UIManager->ShowUI(EHUDState::Inventory);
+				UE_LOG(LogTemp, Warning, TEXT("Show Inventory UI"));
+				MyPlayerController->ShowCursor(true);
+			}
+
+			bIsShowInventory = !bIsShowInventory;
+		}
+
+	}
 }
 
-void AMyCharacter::StopZoom()
+void AMyCharacter::OnInputESCKey()
 {
-	bIsZooming = false;
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+		if (HexboundGameInstance == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find Hexbound GameInstance"));
+			return;
+		}
+
+		UUIManager* UIManager = GetGameInstance()->GetSubsystem<UUIManager>();
+		if (UIManager == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cant' Find UIManager"));
+			return;
+		}
+
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+		{
+			AMyPlayerController* MyPlayerController = Cast<AMyPlayerController>(PlayerController);
+
+			if (bIsShowPauseUI)
+			{
+				UIManager->HideUI(EHUDState::Pause);
+				UE_LOG(LogTemp, Warning, TEXT("Hide Pause UI"));
+				MyPlayerController->ShowCursor(false);
+			}
+			else
+			{
+				UIManager->ShowUI(EHUDState::Pause);
+				UE_LOG(LogTemp, Warning, TEXT("Show Pause UI"));
+				MyPlayerController->ShowCursor(true);
+			}
+
+			bIsShowPauseUI = !bIsShowPauseUI;
+		}
+	}
 }
 
-bool AMyCharacter::GetIsCrouching() const
+void AMyCharacter::TryPickUp()
 {
-	return bIsCrouching;
+	UE_LOG(LogTemp, Warning, TEXT("Try PickUp Item"));
 }
+
+void AMyCharacter::CharacterTakeDamage(float DamageAmount)
+{
+	Health -= DamageAmount;
+	Health = FMath::Max(Health, 0.0f);
+	UE_LOG(LogTemp, Warning, TEXT("체력: %f"), Health);
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NULL"));
+	}
+}
+
+float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	CharacterTakeDamage(ActualDamage);
+
+	return ActualDamage;
+}
+
+void AMyCharacter::OnPlayerDeath()
+{
+	// TO DO : Character Death Behavior or Show Finish Widget
+
+}
+
+#pragma region Bind Mapping
+
+void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		if (AMyPlayerController* PlayerController = Cast<AMyPlayerController>(GetController()))
+		{
+			// ======================  캐릭터 이동관련  ===========================
+			if (PlayerController->MoveAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->MoveAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMyCharacter::Move
+				);
+			}
+			if (PlayerController->JumpAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->JumpAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMyCharacter::StartJump
+				);
+				EnhancedInput->BindAction(
+					PlayerController->MoveAction,
+					ETriggerEvent::Completed,
+					this,
+					&AMyCharacter::StopJump
+				);
+			}
+			if (PlayerController->LookAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->LookAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMyCharacter::Look
+				);
+			}
+			if (PlayerController->SprintAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->SprintAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMyCharacter::StartSprint
+				);
+				EnhancedInput->BindAction(
+					PlayerController->SprintAction,
+					ETriggerEvent::Completed,
+					this,
+					&AMyCharacter::StopSprint
+				);
+			}
+			if (PlayerController->CrouchAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->CrouchAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMyCharacter::StartCrouch
+				);
+				EnhancedInput->BindAction(
+					PlayerController->CrouchAction,
+					ETriggerEvent::Completed,
+					this,
+					&AMyCharacter::StopCrouch
+				);
+			}
+
+			// ======================  캐릭터 공격, 줌  ===========================
+			if (PlayerController->AttackAction)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Binding MeleeAttackAction to PerformMeleeAttack"));
+				EnhancedInput->BindAction(
+					PlayerController->AttackAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMyCharacter::PerformMeleeAttack
+				);
+			}
+			if (PlayerController->ZoomAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->ZoomAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::StartZoom
+				);
+
+				EnhancedInput->BindAction(
+					PlayerController->ZoomAction,
+					ETriggerEvent::Completed,
+					this,
+					&AMyCharacter::StopZoom
+				);
+			}
+
+			// ======================  캐릭터 무기 장착 및 아이템 사용  ===========================
+			if (PlayerController->EquipMainAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->EquipMainAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryEquipMainWeapon
+				);
+			}
+
+			if (PlayerController->EquipSubAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->EquipSubAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryEquipSubWeapon
+				);
+			}
+
+			if (PlayerController->EquipMeleeAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->EquipMeleeAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryEquipMeleeWeapon
+				);
+			}
+
+			if (PlayerController->EquipThrowableAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->EquipThrowableAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryEquipThrowableWeapon
+				);
+			}
+
+			if (PlayerController->UseHealthItemAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->UseHealthItemAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryUseHealingItem
+				);
+			}
+
+			// ====================== 설정, 인벤토리, 아이템 상호작용  ===========================
+			if (PlayerController->InputInventoryAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->InputInventoryAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::OnInputInventoryKey
+				);
+			}
+
+			if (PlayerController->InputESCAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->InputESCAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::OnInputESCKey
+				);
+			}
+
+			if (PlayerController->InputPickUpAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->InputPickUpAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryPickUp
+				);
+			}
+		}
+	}
+}
+
+
+#pragma endregion
+
+

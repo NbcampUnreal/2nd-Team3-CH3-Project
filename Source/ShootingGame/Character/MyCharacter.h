@@ -30,6 +30,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// ======================  캐릭터 이동관련  ===========================
 	UFUNCTION()
 	void Move(const FInputActionValue& value);
 	UFUNCTION()
@@ -38,17 +39,51 @@ protected:
 	void StopJump(const FInputActionValue& value);
 	UFUNCTION()
 	void Look(const FInputActionValue& value);
+
 	UFUNCTION()
 	void StartSprint(const FInputActionValue& value);
 	UFUNCTION()
 	void StopSprint(const FInputActionValue& value);
+
+	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Movement")
+	bool bIsCrouching;
 	UFUNCTION()
 	void StartCrouch(const FInputActionValue& value);
 	UFUNCTION()
 	void StopCrouch(const FInputActionValue& value);
-	UFUNCTION(BlueprintCallable, Category = "Character")
+	UFUNCTION(BlueprintCallable, Category = "Movement")
 	bool GetIsCrouching() const;
 
+	// ======================  캐릭터 공격, 줌  ===========================
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* WeaponSlot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	ABaseWeapon* EquippedWeapon;
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PerformMeleeAttack();
+
+	// ======================  캐릭터 무기 장착 및 아이템 사용  ===========================
+	void TryEquipMainWeapon();
+	void TryEquipSubWeapon();
+	void TryEquipMeleeWeapon();
+	void TryEquipThrowableWeapon();
+	UFUNCTION()
+	void TryUseHealingItem();
+
+	// ====================== 설정, 인벤토리, 아이템 상호작용  ===========================
+	bool bIsShowInventory;
+	UFUNCTION(BlueprintCallable)
+	void OnInputInventoryKey();
+
+	bool bIsShowPauseUI;
+	UFUNCTION(BlueprintCallable)
+	void OnInputESCKey();
+
+	void TryPickUp();
+
+	// ====================== 캐릭터 대미지 처리  ===========================
 	UFUNCTION()
 	void CharacterTakeDamage(float DamageAmount);
 	UFUNCTION()
@@ -57,23 +92,8 @@ protected:
 		struct FDamageEvent const& DamageEvent,
 		AController* EventInstigator,
 		AActor* DamageCauser) override;
-	UFUNCTION(BlueprintCallable, Category = "Combat")
 
 	void OnPlayerDeath();
-
-	void PerformMeleeAttack();
-	UFUNCTION()
-	void StartHealing();
-
-	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = "Movement")
-	bool bIsCrouching;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	UChildActorComponent* WeaponSlot;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	ABaseWeapon* EquippedWeapon;
-
 
 private:
 	float NormalSpeed;

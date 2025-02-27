@@ -7,7 +7,17 @@ AMyPlayerController::AMyPlayerController()
 	JumpAction(nullptr),
 	LookAction(nullptr),
 	SprintAction(nullptr),
-	CrouchAction(nullptr)
+	CrouchAction(nullptr),
+	AttackAction(nullptr),
+	ZoomAction(nullptr),
+	EquipMainAction(nullptr),
+	EquipSubAction(nullptr),
+	EquipMeleeAction(nullptr),
+	EquipThrowableAction(nullptr),
+	UseHealthItemAction(nullptr),
+	InputInventoryAction(nullptr),
+	InputESCAction(nullptr),
+	InputPickUpAction(nullptr)
 {
 
 }
@@ -27,7 +37,7 @@ void AMyPlayerController::BeginPlay()
 		}
 	}
 
-	if (MeleeAttackAction)
+	if (AttackAction)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MeleeAttackAction is set"));
 	}
@@ -50,6 +60,21 @@ void AMyPlayerController::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("ZoomAction is NULL"));
+	}
+}
+
+void AMyPlayerController::ShowCursor(bool isShow)
+{
+	//SetActorHiddenInGame(isShow);
+	bShowMouseCursor = isShow;
+
+	if (isShow)
+	{
+		SetInputMode(FInputModeUIOnly());
+	}
+	else
+	{
+		SetInputMode(FInputModeGameOnly());
 	}
 }
 
