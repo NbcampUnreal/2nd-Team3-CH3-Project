@@ -70,12 +70,80 @@ void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	float CurrentYaw = GetActorRotation().Yaw;
+
 	if (CameraComp)
 	{
 		float TargetFOV = bIsZooming ? ZoomedFOV : DefaultFOV;
 		float NewFOV = FMath::FInterpTo(CameraComp->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed);
 		CameraComp->SetFieldOfView(NewFOV);
 	}
+	if (Controller)
+	{
+		FRotator ControlRotation = Controller->GetControlRotation();
+		FRotator TargetRotation(0.f, ControlRotation.Yaw, 0.f);
+		FRotator SmoothRotation = FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, 10.0f);
+		SetActorRotation(SmoothRotation);
+
+		// Yaw Offset 업데이트
+		float NewYawOffset = CurrentYaw - PreviousYaw;
+		NewYawOffset = FMath::Clamp(NewYawOffset, -90.f, 90.f);
+		YawOffset = NewYawOffset;
+
+		//if (FMath::Abs(YawOffset) > 5.f)
+		//{
+		//	PreviousYaw = CurrentYaw;
+		//	UE_LOG(LogTemp, Warning, TEXT("Updated PreviousYaw: %f"), PreviousYaw);
+		//}
+
+		//if (FMath::Abs(YawOffset) < 5.0f)
+		//{
+		//	YawOffset = FMath::FInterpTo(YawOffset, 0.f, DeltaTime, 5.0f);
+		//}
+
+		//if (FMath::Abs(YawOffset) > 45.f)
+		//{
+		//	if (!bIsTurning)
+		//	{
+		//		PlayAnimMontage(Turn90Anim);
+		//		bIsTurning = true;
+		//	}
+		//}
+		//else if (bIsTurning && FMath::Abs(YawOffset) < 5.f)
+		//{
+		//	StopAnimMontage(Turn90Anim);
+		//	bIsTurning = false;
+		//}
+
+		/*UE_LOG(LogTemp, Warning, TEXT("YawOffset: %f, PreviousYaw: %f"), YawOffset, PreviousYaw);*/
+	}
+	if (bInterpToThirdPerson)
+	{
+		if (SpringArmComp)
+		{
+			CameraComp->AttachToComponent(SpringArmComp, FAttachmentTransformRules::KeepRelativeTransform);
+
+			float NewTargetArmLength = FMath::FInterpTo(SpringArmComp->TargetArmLength, 300.f, DeltaTime, 5.f);
+			SpringArmComp->TargetArmLength = NewTargetArmLength;
+		}
+
+		FVector NewLocation = FMath::VInterpTo(CameraComp->GetComponentLocation(), SpringArmComp->GetComponentLocation(), DeltaTime, 10.f);
+		FRotator NewRotation = FMath::RInterpTo(CameraComp->GetComponentRotation(), SpringArmComp->GetComponentRotation(), DeltaTime, 10.f);
+
+		CameraComp->SetWorldLocation(NewLocation);
+		CameraComp->SetWorldRotation(NewRotation);
+
+		if (FVector::Dist(NewLocation, SpringArmComp->GetComponentLocation()) < 1.f &&
+			FMath::Abs(NewRotation.Yaw - SpringArmComp->GetComponentRotation().Yaw) < 1.f &&
+			FMath::Abs(SpringArmComp->TargetArmLength - 300.f) < 1.f)
+		{
+			bInterpToThirdPerson = false;
+
+			CameraComp->AttachToComponent(SpringArmComp, FAttachmentTransformRules::SnapToTargetIncludingScale);
+			CameraComp->bUsePawnControlRotation = false;
+		}
+	}
+
 }
 
 #pragma region Character Movement
@@ -201,13 +269,61 @@ void AMyCharacter::PerformMeleeAttack()
 
 void AMyCharacter::StartZoom()
 {
-	bIsZooming = true;
+	ToggleFirstPerson();
+	//bIsZooming = true;
+	//APlayerController* PC = Cast<APlayerController>(GetController());
+	//if (PC)
+	//{
+	//	APlayerHUD* HUD = Cast<APlayerHUD>(PC->GetHUD());
+	//	if (HUD)
+	//	{
+	//		HUD->SetCrosshairSize(true);
+	//	}
+	//}
 }
 
 void AMyCharacter::StopZoom()
 {
-	bIsZooming = false;
+	ToggleFirstPerson();
+	//bIsZooming = false;
+	//APlayerController* PC = Cast<APlayerController>(GetController());
+	//if (PC)
+	//{
+	//	APlayerHUD* HUD = Cast<APlayerHUD>(PC->GetHUD());
+	//	if (HUD)
+	//	{
+	//		HUD->SetCrosshairSize(false);
+	//	}
+	//}
 }
+
+void AMyCharacter::ToggleFirstPerson()
+{
+	bIsFirstPerson = !bIsFirstPerson;
+
+	if (bIsFirstPerson)
+	{
+		SavedCameraLocation = CameraComp->GetComponentLocation();
+		SavedCameraRotation = CameraComp->GetComponentRotation();
+
+		SpringArmComp->TargetArmLength = 0.f;
+		CameraComp->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "head");
+		CameraComp->SetRelativeLocation(FirstPersonCameraOffset);
+		CameraComp->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+		CameraComp->bUsePawnControlRotation = true;
+	}
+	else
+	{
+		CameraComp->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		CameraComp->AttachToComponent(SpringArmComp, FAttachmentTransformRules::SnapToTargetIncludingScale);
+
+
+		SpringArmComp->TargetArmLength = 300.f;
+		SpringArmComp->SetRelativeLocation(FVector(0.f, 25.f, 52.f));
+		CameraComp->bUsePawnControlRotation = false;
+	}
+}
+
 
 #pragma endregion
 
@@ -473,14 +589,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 					PlayerController->ZoomAction,
 					ETriggerEvent::Started,
 					this,
-					&AMyCharacter::StartZoom
-				);
-
-				EnhancedInput->BindAction(
-					PlayerController->ZoomAction,
-					ETriggerEvent::Completed,
-					this,
-					&AMyCharacter::StopZoom
+					&AMyCharacter::ToggleFirstPerson
 				);
 			}
 

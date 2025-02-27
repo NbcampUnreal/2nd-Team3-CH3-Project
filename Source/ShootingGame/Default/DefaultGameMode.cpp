@@ -2,6 +2,8 @@
 
 
 #include "DefaultGameMode.h"
+#include "PlayerHUD.h"
+#include "GameFramework/HUD.h"
 #include "../Character/MyCharacter.h"
 #include "../Character/MyPlayerController.h"
 
@@ -23,5 +25,10 @@ ADefaultGameMode::ADefaultGameMode()
 	if (PlayerControllerBPClass.Succeeded())
 	{
 		PlayerControllerClass = PlayerControllerBPClass.Class;
+	}
+	static ConstructorHelpers::FClassFinder<AHUD> HUDClassBP(TEXT("/Game/Characters/Blueprints/BP_PlayerHUD"));
+	if (HUDClassBP.Succeeded())
+	{
+		HUDClass = HUDClassBP.Class;
 	}*/
 }

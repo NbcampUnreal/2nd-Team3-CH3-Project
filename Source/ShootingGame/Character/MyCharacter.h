@@ -26,6 +26,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
 	UCameraComponent* CameraComp;
 
+	// ====================== 설정, 인벤토리, 아이템 상호작용  ===========================
+	bool bIsShowInventory;
+	UFUNCTION(BlueprintCallable)
+	void OnInputInventoryKey();
+
+	bool bIsShowPauseUI;
+	UFUNCTION(BlueprintCallable)
+	void OnInputESCKey();
+
+	void TryPickUp();
+
 protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -72,17 +83,6 @@ protected:
 	UFUNCTION()
 	void TryUseHealingItem();
 
-	// ====================== 설정, 인벤토리, 아이템 상호작용  ===========================
-	bool bIsShowInventory;
-	UFUNCTION(BlueprintCallable)
-	void OnInputInventoryKey();
-
-	bool bIsShowPauseUI;
-	UFUNCTION(BlueprintCallable)
-	void OnInputESCKey();
-
-	void TryPickUp();
-
 	// ====================== 캐릭터 대미지 처리  ===========================
 	UFUNCTION()
 	void CharacterTakeDamage(float DamageAmount);
@@ -95,6 +95,14 @@ protected:
 
 	void OnPlayerDeath();
 
+	// ====================== 회전 관련  ===========================
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* Turn90Anim;
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	float YawOffset;
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	float PreviousYaw;
+
 private:
 	float NormalSpeed;
 	float SprintSpeedMultiplier;
@@ -104,6 +112,9 @@ private:
 	float DefaultFOV;
 	float ZoomedFOV = 60.0f;
 	float ZoomInterpSpeed = 10.0f;
+	FVector FirstPersonCameraOffset = FVector(0.f, 0.f, 60.f);
+	FVector SavedCameraLocation;
+	FRotator SavedCameraRotation;
 
 
 	UPROPERTY(EditAnywhere, Category = "Health")
@@ -121,8 +132,14 @@ private:
 	UPROPERTY()
 	bool bIsZooming = false;
 
+	bool bIsTurning = false;
+	bool bIsFirstPerson = false;
+	bool bInterpToThirdPerson = false;
+
 	UFUNCTION()
 	void StartZoom();
 	UFUNCTION()
 	void StopZoom();
+
+	void ToggleFirstPerson();
 };
