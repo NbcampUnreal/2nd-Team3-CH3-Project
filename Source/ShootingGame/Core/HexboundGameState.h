@@ -20,8 +20,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnGameStart();
 
-	UFUNCTION(BlueprintCallable)
-	void OpenLevel(ELevel level);
+	//UFUNCTION(BlueprintCallable)
+	//void OpenLevel(ELevel level);
 
 private:
 	void Init();

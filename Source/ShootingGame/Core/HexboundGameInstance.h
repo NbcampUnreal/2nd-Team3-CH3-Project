@@ -8,7 +8,7 @@ UENUM(BlueprintType)
 enum class ELevel : uint8
 {
 	MenuLevel = 0,
-	MainLevel,
+	MainLevel
 };
 
 class AHexboundPlayerController;
@@ -31,10 +31,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	ELevel GetCurrentLevel();
-	void SetCurrentLevel(ELevel level);
+
+	UFUNCTION(BlueprintCallable)
+	void OpenLevel(ELevel level);
 
 private:
 	void InitUIMangerProperties();
-	ELevel currentLevel;
 
+	ELevel currentLevel;
+	void SetCurrentLevel(ELevel level);
 };

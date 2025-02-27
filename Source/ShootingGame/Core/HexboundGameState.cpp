@@ -15,7 +15,7 @@ void AHexboundGameState::BeginPlay()
 	Super::BeginPlay();
 
 	Init();
-	//OnGameStart();
+	OnGameStart();
 }
 
 void AHexboundGameState::Init()
@@ -45,11 +45,11 @@ void AHexboundGameState::OnGameStart()
 			{
 			case ELevel::MenuLevel:
 				UIManager->SetUIState(EHUDState::MainMenu);
-				hexBoundPlayerController->ShowCursor(true);
+				if(hexBoundPlayerController)hexBoundPlayerController->ShowCursor(true);
 				break;
 			case ELevel::MainLevel:
 				UIManager->SetUIState(EHUDState::InGameBase);
-				hexBoundPlayerController->ShowCursor(false);
+				if (hexBoundPlayerController)hexBoundPlayerController->ShowCursor(false);
 				break;
 			default:
 				break;
@@ -58,15 +58,15 @@ void AHexboundGameState::OnGameStart()
 		}
 	}
 }
-
-void AHexboundGameState::OpenLevel(ELevel level)
-{
-	if (UGameInstance* GameInstance = GetGameInstance())
-	{
-		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
-		HexboundGameInstance->SetCurrentLevel(level);
-	}
-
-	FName levelName = FName(*StaticEnum<ELevel>()->GetNameStringByValue(static_cast<int64>(level)));
-	UGameplayStatics::OpenLevel(GetWorld(), levelName);
-}
+//
+//void AHexboundGameState::OpenLevel(ELevel level)
+//{
+//	if (UGameInstance* GameInstance = GetGameInstance())
+//	{
+//		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+//		HexboundGameInstance->SetCurrentLevel(level);
+//	}
+//
+//	FName levelName = FName(*StaticEnum<ELevel>()->GetNameStringByValue(static_cast<int64>(level)));
+//	UGameplayStatics::OpenLevel(GetWorld(), levelName);
+//}

@@ -1,6 +1,7 @@
 #include "HexboundGameInstance.h"
 #include "HexboundPlayerController.h"
 #include "Managers/UIManager.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Blueprint/UserWidget.h"
 
@@ -34,6 +35,14 @@ ELevel UHexboundGameInstance::GetCurrentLevel()
 void UHexboundGameInstance::SetCurrentLevel(ELevel level)
 {
 	currentLevel = level;
+}
+
+void UHexboundGameInstance::OpenLevel(ELevel level)
+{
+	SetCurrentLevel(level);
+
+	FName levelName = FName(*StaticEnum<ELevel>()->GetNameStringByValue(static_cast<int64>(level)));
+	UGameplayStatics::OpenLevel(GetWorld(), levelName);
 }
 
 
