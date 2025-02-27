@@ -67,14 +67,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
 	float Health;
 
-protected:
-
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-
 	bool bIsShowInventory;
 	UFUNCTION(BlueprintCallable)
 	void OnInputInventoryKey();
@@ -82,6 +74,14 @@ protected:
 	bool bIsShowPauseUI;
 	UFUNCTION(BlueprintCallable)
 	void OnInputESCKey();
+
+protected:
+
+	/** Called for movement input */
+	void Move(const FInputActionValue& Value);
+
+	/** Called for looking input */
+	void Look(const FInputActionValue& Value);
 
 
 protected:
