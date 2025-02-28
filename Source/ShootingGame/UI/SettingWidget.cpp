@@ -79,7 +79,7 @@ void USettingWidget::OnClickedBack()
 			case ELevel::MenuLevel:
 				uiManager->SetUIState(EHUDState::MainMenu);
 				break;
-			case ELevel::MainLevel:
+			case ELevel::DummyLevel:
 				uiManager->HideUI(EHUDState::Setting);
 				uiManager->ShowUI(EHUDState::Pause);
 				break;

@@ -4,7 +4,7 @@
 #include "GameFramework/GameState.h"
 #include "HexboundGameState.generated.h"
 
-class AHexboundPlayerController;
+class AMyPlayerController;
 enum class ELevel : uint8;
 
 UCLASS()
@@ -20,10 +20,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnGameStart();
 
-	//UFUNCTION(BlueprintCallable)
-	//void OpenLevel(ELevel level);
-
 private:
 	void Init();
-	AHexboundPlayerController* hexBoundPlayerController;
+	AMyPlayerController* myPlayerController;
 };
