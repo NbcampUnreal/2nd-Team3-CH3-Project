@@ -5,6 +5,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/HexboundGameInstance.h"
 
 ABaseWeapon::ABaseWeapon()
 {
@@ -41,9 +42,14 @@ void ABaseWeapon::Attack()
 	if (bIsCooltimeEnd)
 	{
 		bIsCooltimeEnd = false;
+
+		UHexboundGameInstance* GameInstance = Cast<UHexboundGameInstance>(GetGameInstance());
+		float FinalVolume = 1.0f;
+		if (GameInstance) FinalVolume = GameInstance->SFXVolume;
+
 		if (AttackSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), AttackSound, FVector::ZeroVector);
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), AttackSound, FVector::ZeroVector, FinalVolume);
 		}
 		GetWorldTimerManager().SetTimer(attackRateTimerHandle, [this]() {bIsCooltimeEnd = true; }, AttackRate, false);
 	}

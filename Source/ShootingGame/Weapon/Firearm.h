@@ -45,6 +45,9 @@ public:
 
 	virtual void Attack() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void Reload();
+
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Component")
@@ -82,9 +85,6 @@ protected:
 	ASuppressor* Suppressor;
 	USoundBase* OriginalAttackSound;
 
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	virtual void Reload();
 	UFUNCTION()
 	virtual void Fire();
 	virtual void BeginPlay() override;

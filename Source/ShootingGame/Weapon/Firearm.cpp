@@ -8,6 +8,7 @@
 #include "NiagaraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/HexboundGameInstance.h"
 
 AFirearm::AFirearm()
 {
@@ -83,7 +84,11 @@ void AFirearm::Attack()
 	{
 		if (EmptyAmmoSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyAmmoSound, GetActorLocation());	// 빈총 격발음
+			UHexboundGameInstance* GameInstance = Cast<UHexboundGameInstance>(GetGameInstance());
+			float FinalVolume = 1.0f;
+			if(GameInstance) FinalVolume = GameInstance->SFXVolume;
+
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyAmmoSound, GetActorLocation(), FinalVolume);	// 빈총 격발음
 		}
 	}
 
