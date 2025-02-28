@@ -52,6 +52,9 @@ class SHOOTINGGAME_API ADefaultCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SettingAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* PickupAction;
+
 public:
 	ADefaultCharacter();
 
@@ -66,6 +69,9 @@ public:
 	float MaxHealth;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
 	float Health;
+
+	UFUNCTION(BlueprintCallable)
+	void OnInputPickupKey();
 
 	bool bIsShowInventory;
 	UFUNCTION(BlueprintCallable)
