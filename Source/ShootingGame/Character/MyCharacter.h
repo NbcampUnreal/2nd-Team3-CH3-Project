@@ -20,7 +20,7 @@ class SHOOTINGGAME_API AMyCharacter : public ACharacter
 
 public:
 	AMyCharacter();
-	void BeginPlay() override;
+	//void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
 	USpringArmComponent* SpringArmComp;
