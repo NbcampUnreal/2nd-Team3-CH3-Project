@@ -329,7 +329,7 @@ void AMyCharacter::ToggleFirstPerson()
 		CameraComp->AttachToComponent(SpringArmComp, FAttachmentTransformRules::SnapToTargetIncludingScale);
 
 
-		SpringArmComp->TargetArmLength = 300.f;
+		SpringArmComp->TargetArmLength = 75.f;
 		SpringArmComp->SetRelativeLocation(FVector(0.f, 25.f, 52.f));
 		CameraComp->bUsePawnControlRotation = false;
 	}
