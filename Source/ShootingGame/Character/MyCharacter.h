@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -20,13 +20,14 @@ class SHOOTINGGAME_API AMyCharacter : public ACharacter
 
 public:
 	AMyCharacter();
+	void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
 	USpringArmComponent* SpringArmComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
 	UCameraComponent* CameraComp;
 
-	// ====================== ¼³Á¤, ÀÎº¥Åä¸®, ¾ÆÀÌÅÛ »óÈ£ÀÛ¿ë  ===========================
+	// ====================== ì„¤ì •, ì¸ë²¤í† ë¦¬, ì•„ì´í…œ ìƒí˜¸ì‘ìš©  ===========================
 	bool bIsShowInventory;
 	UFUNCTION(BlueprintCallable)
 	void OnInputInventoryKey();
@@ -41,7 +42,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// ======================  Ä³¸¯ÅÍ ÀÌµ¿°ü·Ã  ===========================
+	// ======================  ìºë¦­í„° ì´ë™ê´€ë ¨  ===========================
 	UFUNCTION()
 	void Move(const FInputActionValue& value);
 	UFUNCTION()
@@ -65,9 +66,12 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	bool GetIsCrouching() const;
 
-	// ======================  Ä³¸¯ÅÍ °ø°İ, ÁÜ  ===========================
+	// ======================  ìºë¦­í„° ê³µê²©, ì¤Œ  ===========================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	UChildActorComponent* WeaponSlot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* Magazine;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	ABaseWeapon* EquippedWeapon;
@@ -75,7 +79,15 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PerformMeleeAttack();
 
-	// ======================  Ä³¸¯ÅÍ ¹«±â ÀåÂø ¹× ¾ÆÀÌÅÛ »ç¿ë  ===========================
+	void TryReload();
+	void AttachParts();
+	void TryAddAmmo();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<class AParts> Parts;
+
+	AParts* InstanceParts;
+	// ======================  ìºë¦­í„° ë¬´ê¸° ì¥ì°© ë° ì•„ì´í…œ ì‚¬ìš©  ===========================
 	void TryEquipMainWeapon();
 	void TryEquipSubWeapon();
 	void TryEquipMeleeWeapon();
@@ -83,7 +95,7 @@ protected:
 	UFUNCTION()
 	void TryUseHealingItem();
 
-	// ====================== Ä³¸¯ÅÍ ´ë¹ÌÁö Ã³¸®  ===========================
+	// ====================== ìºë¦­í„° ëŒ€ë¯¸ì§€ ì²˜ë¦¬  ===========================
 	UFUNCTION()
 	void CharacterTakeDamage(float DamageAmount);
 	UFUNCTION()
@@ -95,7 +107,7 @@ protected:
 
 	void OnPlayerDeath();
 
-	// ====================== È¸Àü °ü·Ã  ===========================
+	// ====================== íšŒì „ ê´€ë ¨  ===========================
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* Turn90Anim;
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
@@ -142,4 +154,7 @@ private:
 	void StopZoom();
 
 	void ToggleFirstPerson();
+
+
+	void LogFireAmmoState(class AFirearm* fireWeapon);
 };

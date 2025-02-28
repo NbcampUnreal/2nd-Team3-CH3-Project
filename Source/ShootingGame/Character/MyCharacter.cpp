@@ -1,9 +1,11 @@
-
+ï»¿
 
 #include "Character/MyCharacter.h"
 #include "Character/MyPlayerController.h"
 #include "Weapon/BaseWeapon.h"
+#include "Weapon/Firearm.h"
 #include "Weapon/MeleeWeapon.h"
+#include "Weapon/Parts.h"
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -17,18 +19,18 @@ AMyCharacter::AMyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//½ºÇÁ¸µ ¾Ï
+	//ìŠ¤í”„ë§ ì•”
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->TargetArmLength = 300.0f;
 	SpringArmComp->bUsePawnControlRotation = true;
 
-	//Ä«¸Ş¶ó
+	//ì¹´ë©”ë¼
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
 	CameraComp->bUsePawnControlRotation = false;
 
-	//¼Óµµ °ü·Ã
+	//ì†ë„ ê´€ë ¨
 	NormalSpeed = 600.0f;
 	SprintSpeedMultiplier = 1.7f;
 	SprintSpeed = NormalSpeed * SprintSpeedMultiplier;
@@ -45,25 +47,29 @@ AMyCharacter::AMyCharacter()
 		DefaultFOV = CameraComp->FieldOfView;
 	}
 
-	// Weapon ChildActorComponent ¼³Á¤
+	// Weapon ChildActorComponent ì„¤ì •
 	WeaponSlot = CreateDefaultSubobject<UChildActorComponent>(TEXT("WeaponSlot"));
-	WeaponSlot->SetupAttachment(GetMesh(), TEXT("RightHand")); // Skeletal MeshÀÇ Slot ÀÌ¸§
-	//WeaponSlot->SetChildActorClass(DefaultWeaponClass); // ±âº» ¹«±â Å¬·¡½º ¼³Á¤
+	WeaponSlot->SetupAttachment(GetMesh(), TEXT("RightHand")); // Skeletal Meshì˜ Slot ì´ë¦„
+
+	// ì„ì‹œë¡œ ì¶”ê°€í•´ë‘  (ìˆ˜ì • í•„ìš”)
+	Magazine = CreateDefaultSubobject<UChildActorComponent>(TEXT("Magazine"));
 }
 
 //void AMyCharacter::BeginPlay()
 //{
 //	Super::BeginPlay();
 //
-//	// ±âº» ¹«±â ÀåÂø
-//	if (DefaultWeaponClass)
-//	{
-//		EquippedWeapon = GetWorld()->SpawnActor<ABaseWeapon>(DefaultWeaponClass);
-//		if (EquippedWeapon)
-//		{
-//			EquippedWeapon->AttachWeaponToCharacter(this);
-//		}
-//	}
+//	// ê¸°ë³¸ ë¬´ê¸° ì¥ì°©
+//	//if (DefaultWeaponClass)
+//	//{
+//	//	EquippedWeapon = GetWorld()->SpawnActor<ABaseWeapon>(DefaultWeaponClass);
+//	//	if (EquippedWeapon)
+//	//	{
+//	//		EquippedWeapon->AttachWeaponToCharacter(this);
+//	//	}
+//	//}
+//
+//	
 //}
 
 void AMyCharacter::Tick(float DeltaTime)
@@ -85,7 +91,7 @@ void AMyCharacter::Tick(float DeltaTime)
 		FRotator SmoothRotation = FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, 10.0f);
 		SetActorRotation(SmoothRotation);
 
-		// Yaw Offset ¾÷µ¥ÀÌÆ®
+		// Yaw Offset ì—…ë°ì´íŠ¸
 		float NewYawOffset = CurrentYaw - PreviousYaw;
 		NewYawOffset = FMath::Clamp(NewYawOffset, -90.f, 90.f);
 		YawOffset = NewYawOffset;
@@ -147,7 +153,7 @@ void AMyCharacter::Tick(float DeltaTime)
 }
 
 #pragma region Character Movement
-// ======================  Ä³¸¯ÅÍ ÀÌµ¿°ü·Ã  ===========================
+// ======================  ìºë¦­í„° ì´ë™ê´€ë ¨  ===========================
 void AMyCharacter::Move(const FInputActionValue& value)
 {
 	if (!Controller || !CameraComp) return;
@@ -156,19 +162,19 @@ void AMyCharacter::Move(const FInputActionValue& value)
 
 	if (MoveInput.IsNearlyZero()) return;
 
-	// Ä«¸Ş¶óÀÇ È¸Àü Á¤º¸ °¡Á®¿À±â
+	// ì¹´ë©”ë¼ì˜ íšŒì „ ì •ë³´ ê°€ì ¸ì˜¤ê¸°
 	const FRotator CameraRotation = CameraComp->GetComponentRotation();
-	const FRotator YawRotation(0.f, CameraRotation.Yaw, 0.f); // Pitch¿Í Roll Á¦°Å, Yaw¸¸ À¯Áö
+	const FRotator YawRotation(0.f, CameraRotation.Yaw, 0.f); // Pitchì™€ Roll ì œê±°, Yawë§Œ ìœ ì§€
 
-	// Ä³¸¯ÅÍ°¡ Ç×»ó Ä«¸Ş¶ó ¹æÇâÀ» º¸°Ô ¼³Á¤
+	// ìºë¦­í„°ê°€ í•­ìƒ ì¹´ë©”ë¼ ë°©í–¥ì„ ë³´ê²Œ ì„¤ì •
 	SetActorRotation(YawRotation);
 
-	// Ä«¸Ş¶ó ±âÁØÀÇ Àü/ÈÄ ¹æÇâ
+	// ì¹´ë©”ë¼ ê¸°ì¤€ì˜ ì „/í›„ ë°©í–¥
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	// Ä«¸Ş¶ó ±âÁØÀÇ ÁÂ/¿ì ¹æÇâ
+	// ì¹´ë©”ë¼ ê¸°ì¤€ì˜ ì¢Œ/ìš° ë°©í–¥
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	// ÀÌµ¿ ÀÔ·Â Àû¿ë
+	// ì´ë™ ì…ë ¥ ì ìš©
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
 		AddMovementInput(ForwardDirection, MoveInput.X);
@@ -242,22 +248,27 @@ bool AMyCharacter::GetIsCrouching() const
 #pragma endregion
 
 #pragma region Zoom & Attack
-// ======================  Ä³¸¯ÅÍ °ø°İ, ÁÜ  ===========================
+// ======================  ìºë¦­í„° ê³µê²©, ì¤Œ  ===========================
 void AMyCharacter::PerformMeleeAttack()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PerformMeleeAttack")); // ½ÇÇà È®ÀÎ¿ë ·Î±×
+	UE_LOG(LogTemp, Warning, TEXT("PerformMeleeAttack")); // ì‹¤í–‰ í™•ì¸ìš© ë¡œê·¸
 
 	if (WeaponSlot)
 	{
-		// TO DO : Equipped Weapon Type º° Ä³½ºÆÃ ºĞ¸® or ¾×¼Ç ºĞ¸®
+		// TO DO : Equipped Weapon Type ë³„ ìºìŠ¤íŒ… ë¶„ë¦¬ or ì•¡ì…˜ ë¶„ë¦¬
 
 		ABaseWeapon* equippedWeapon = Cast<ABaseWeapon>(WeaponSlot->GetChildActor());
 		//EquippedWeapon = Cast<ABaseWeapon>(Weapon->GetChildActor());
 		if (equippedWeapon)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
-			equippedWeapon->Attack(); // ¹«±âÀÇ Attack ÇÔ¼ö È£Ãâ
+			equippedWeapon->Attack(); // ë¬´ê¸°ì˜ Attack í•¨ìˆ˜ í˜¸ì¶œ
 
+			// ë¡œê¹…ìš© => ì¶”í›„ ì‚­ì œ í•„ìš”
+			if (AFirearm* fireWeapon = Cast<AFirearm>(equippedWeapon))
+			{
+				LogFireAmmoState(fireWeapon);
+			}
 		}
 		else
 		{
@@ -325,6 +336,63 @@ void AMyCharacter::ToggleFirstPerson()
 }
 
 
+void AMyCharacter::TryReload()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Try Reload Weapon"));
+
+	if (WeaponSlot)
+	{
+		// TO DO : Equipped Weapon Type ë³„ ìºìŠ¤íŒ… ë¶„ë¦¬ or ì•¡ì…˜ ë¶„ë¦¬
+		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
+		
+		if (equippedWeapon)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
+			equippedWeapon->Reload(); // ë¬´ê¸°ì˜ Attack í•¨ìˆ˜ í˜¸ì¶œ
+
+			int32 value = equippedWeapon->GetCurrentAmmoValue();
+
+			LogFireAmmoState(equippedWeapon);	// ë¡œê¹…ìš© => ì¶”í›„ ì‚­ì œ í•„ìš”
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("No Weapon Equipped"));
+		}
+	}
+
+}
+
+void AMyCharacter::AttachParts()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Try Attach Parts To Weapon"));
+
+	if (WeaponSlot)
+	{
+		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
+
+		if (Magazine)
+		{
+			AParts* magazine = Cast<AParts>(Magazine->GetChildActor());
+			equippedWeapon->EquipParts(magazine); // ë¬´ê¸°ì˜ Attack í•¨ìˆ˜ í˜¸ì¶œ
+		}
+	}
+}
+
+void AMyCharacter::TryAddAmmo()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Try Add Ammo To Weapon"));
+
+	if (WeaponSlot)
+	{
+		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
+
+		equippedWeapon->AddAmmo(30); // ë¬´ê¸°ì˜ Attack í•¨ìˆ˜ í˜¸ì¶œ
+
+		LogFireAmmoState(equippedWeapon);	// ë¡œê¹…ìš© => ì¶”í›„ ì‚­ì œ í•„ìš”
+	}
+}
+
+
 #pragma endregion
 
 void AMyCharacter::TryEquipMainWeapon()
@@ -359,7 +427,7 @@ void AMyCharacter::TryUseHealingItem()
 		HealingTimerHandle,
 		this,
 		&AMyCharacter::CompleteHealing,
-		3.0f, // 3ÃÊ ÈÄ ½ÇÇà
+		3.0f, // 3ì´ˆ í›„ ì‹¤í–‰
 		false
 	);
 
@@ -471,7 +539,7 @@ void AMyCharacter::CharacterTakeDamage(float DamageAmount)
 {
 	Health -= DamageAmount;
 	Health = FMath::Max(Health, 0.0f);
-	UE_LOG(LogTemp, Warning, TEXT("Ã¼·Â: %f"), Health);
+	UE_LOG(LogTemp, Warning, TEXT("ì²´ë ¥: %f"), Health);
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
@@ -497,6 +565,17 @@ void AMyCharacter::OnPlayerDeath()
 
 }
 
+
+void AMyCharacter::LogFireAmmoState(AFirearm* fireWeapon)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green,
+		FString::Printf(TEXT("Current Ammo : %d!! %d / %d "),
+			fireWeapon->GetCurrentAmmoValue(),
+			fireWeapon->GetReloadedAmmoValue(),
+			fireWeapon->GetMaxReloadedAmmoValue()));
+}
+
+
 #pragma region Bind Mapping
 
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -507,7 +586,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	{
 		if (AMyPlayerController* PlayerController = Cast<AMyPlayerController>(GetController()))
 		{
-			// ======================  Ä³¸¯ÅÍ ÀÌµ¿°ü·Ã  ===========================
+			// ======================  ìºë¦­í„° ì´ë™ê´€ë ¨  ===========================
 			if (PlayerController->MoveAction)
 			{
 				EnhancedInput->BindAction(
@@ -572,7 +651,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 				);
 			}
 
-			// ======================  Ä³¸¯ÅÍ °ø°İ, ÁÜ  ===========================
+			// ======================  ìºë¦­í„° ê³µê²©, ì¤Œ  ===========================
 			if (PlayerController->AttackAction)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Binding MeleeAttackAction to PerformMeleeAttack"));
@@ -592,8 +671,17 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 					&AMyCharacter::ToggleFirstPerson
 				);
 			}
+			if (PlayerController->ReloadAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->ReloadAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryReload
+				);
+			}
 
-			// ======================  Ä³¸¯ÅÍ ¹«±â ÀåÂø ¹× ¾ÆÀÌÅÛ »ç¿ë  ===========================
+			// ======================  ìºë¦­í„° ë¬´ê¸° ì¥ì°© ë° ì•„ì´í…œ ì‚¬ìš©  ===========================
 			if (PlayerController->EquipMainAction)
 			{
 				EnhancedInput->BindAction(
@@ -644,7 +732,28 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 				);
 			}
 
-			// ====================== ¼³Á¤, ÀÎº¥Åä¸®, ¾ÆÀÌÅÛ »óÈ£ÀÛ¿ë  ===========================
+
+			if (PlayerController->DebuggingPartsAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->DebuggingPartsAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::AttachParts
+				);
+			}
+
+			if (PlayerController->TestAddAmmoAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->TestAddAmmoAction,
+					ETriggerEvent::Started,
+					this,
+					&AMyCharacter::TryAddAmmo
+				);
+			}
+
+			// ====================== ì„¤ì •, ì¸ë²¤í† ë¦¬, ì•„ì´í…œ ìƒí˜¸ì‘ìš©  ===========================
 			if (PlayerController->InputInventoryAction)
 			{
 				EnhancedInput->BindAction(

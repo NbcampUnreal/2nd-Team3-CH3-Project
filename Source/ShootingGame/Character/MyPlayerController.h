@@ -1,4 +1,4 @@
-
+ï»¿
 #pragma once
 
 #include "CoreMinimal.h"
@@ -16,7 +16,7 @@ class SHOOTINGGAME_API AMyPlayerController : public APlayerController
 public:
 	AMyPlayerController();
 
-	// ======================  Ä³¸¯ÅÍ ÀÌµ¿°ü·Ã  ===========================
+	// ======================  ìºë¦­í„° ì´ë™ê´€ë ¨  ===========================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* InputMappingContext;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -30,13 +30,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* CrouchAction;
 
-	// ======================  Ä³¸¯ÅÍ °ø°İ, ÁÜ  ===========================
+	// ======================  ìºë¦­í„° ê³µê²©, ì¤Œ  ===========================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* AttackAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* ZoomAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* ReloadAction;
 
-	// ======================  Ä³¸¯ÅÍ ¹«±â ÀåÂø ¹× ¾ÆÀÌÅÛ »ç¿ë  ===========================
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* DebuggingPartsAction;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* TestAddAmmoAction;
+
+	// ======================  ìºë¦­í„° ë¬´ê¸° ì¥ì°© ë° ì•„ì´í…œ ì‚¬ìš©  ===========================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* EquipMainAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -49,7 +56,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* UseHealthItemAction;
 
-	// ====================== ¼³Á¤, ÀÎº¥Åä¸®, ¾ÆÀÌÅÛ »óÈ£ÀÛ¿ë  ===========================
+	// ====================== ì„¤ì •, ì¸ë²¤í† ë¦¬, ì•„ì´í…œ ìƒí˜¸ì‘ìš©  ===========================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* InputInventoryAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")

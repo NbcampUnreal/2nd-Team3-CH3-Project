@@ -1,4 +1,4 @@
-#include "Character/MyPlayerController.h"
+﻿#include "Character/MyPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 
 AMyPlayerController::AMyPlayerController()
@@ -8,13 +8,19 @@ AMyPlayerController::AMyPlayerController()
 	LookAction(nullptr),
 	SprintAction(nullptr),
 	CrouchAction(nullptr),
+
 	AttackAction(nullptr),
 	ZoomAction(nullptr),
+	ReloadAction(nullptr),
+	DebuggingPartsAction(nullptr),	// 디버그용으로 Parts 붙여보기 (0)
+	TestAddAmmoAction(nullptr),		// 테스트로 총알 추가 (9)
+
 	EquipMainAction(nullptr),
 	EquipSubAction(nullptr),
 	EquipMeleeAction(nullptr),
 	EquipThrowableAction(nullptr),
 	UseHealthItemAction(nullptr),
+
 	InputInventoryAction(nullptr),
 	InputESCAction(nullptr),
 	InputPickUpAction(nullptr)
