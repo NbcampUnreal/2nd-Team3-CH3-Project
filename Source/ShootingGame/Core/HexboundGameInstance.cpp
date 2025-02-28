@@ -46,6 +46,23 @@ void UHexboundGameInstance::OpenLevel(ELevel level)
 }
 
 
+void UHexboundGameInstance::SetMasterVolume(float Volume)
+{
+	MasterVolume = FMath::Clamp(Volume, 0.0f, 1.0f);
+	UGameplayStatics::SetSoundMixClassOverride(GetWorld(), nullptr, nullptr, MasterVolume, 1.0f, 0.0f, true);
+}
+
+void UHexboundGameInstance::SetSFXVolume(float Volume)
+{
+	SFXVolume = FMath::Clamp(Volume, 0.0f, 1.0f);
+}
+
+void UHexboundGameInstance::SetMusicVolume(float Volume)
+{
+	MusicVolume = FMath::Clamp(Volume, 0.0f, 1.0f);
+}
+
+
 void UHexboundGameInstance::InitUIMangerProperties()
 {
 	UUIManager* UIManager = GetSubsystem<UUIManager>();

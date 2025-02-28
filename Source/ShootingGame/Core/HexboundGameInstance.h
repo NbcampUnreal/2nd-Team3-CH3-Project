@@ -35,6 +35,26 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OpenLevel(ELevel level);
 
+
+	UPROPERTY(BlueprintReadWrite, Category = "Audio")
+	float MasterVolume = 1.0f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Audio")
+	float SFXVolume = 1.0f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Audio")
+	float MusicVolume = 1.0f;
+
+	// 볼륨 설정 함수
+	UFUNCTION(BlueprintCallable, Category = "Audio")
+	void SetMasterVolume(float Volume);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio")
+	void SetSFXVolume(float Volume);
+
+	UFUNCTION(BlueprintCallable, Category = "Audio")
+	void SetMusicVolume(float Volume);
+
 private:
 	void InitUIMangerProperties();
 
