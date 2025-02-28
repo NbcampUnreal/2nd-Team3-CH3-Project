@@ -111,7 +111,7 @@ void ADefaultCharacter::Look(const FInputActionValue& Value)
 
 void ADefaultCharacter::OnInputInventoryKey()
 {
-	if (UGameInstance* GameInstance = GetGameInstance())
+	/*if (UGameInstance* GameInstance = GetGameInstance())
 	{
 		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
 		if (HexboundGameInstance == nullptr)
@@ -147,7 +147,7 @@ void ADefaultCharacter::OnInputInventoryKey()
 			bIsShowInventory = !bIsShowInventory;
 		}
 		
-	}
+	}*/
 }
 
 void ADefaultCharacter::OnInputESCKey()
