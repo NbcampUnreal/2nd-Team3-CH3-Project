@@ -13,6 +13,11 @@ void UPauseWidget::NativeConstruct()
 	{
 		uiManager = GetGameInstance()->GetSubsystem<UUIManager>();
 
+		if (ButtonSetting)
+		{
+			ButtonSetting->OnClicked.AddDynamic(this, &UPauseWidget::OnClickedSetting);
+		}
+
 		if (ButtonResume)
 		{
 			ButtonResume->OnClicked.AddDynamic(this, &UPauseWidget::OnClickedResume);
