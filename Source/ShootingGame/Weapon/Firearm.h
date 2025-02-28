@@ -38,6 +38,14 @@ public:
 	virtual void AddAmmo(int32 AmmoToAdd);
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	virtual int32 GetCurrentAmmoValue() const;
+
+	//============ 로깅용 추후 삭제 무관 ===================
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	virtual int32 GetMaxReloadedAmmoValue() const;
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	virtual int32 GetReloadedAmmoValue() const;
+	//======================================================
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void DetachParts(FName SocketName);
 	UFUNCTION(BlueprintPure, Category = "Weapon")

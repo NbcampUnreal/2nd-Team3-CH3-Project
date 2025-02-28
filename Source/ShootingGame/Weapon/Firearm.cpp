@@ -185,6 +185,16 @@ int32 AFirearm::GetCurrentAmmoValue() const
 	return CurrentAmmo;
 }
 
+int32 AFirearm::GetMaxReloadedAmmoValue() const
+{
+	return MaxReloadedAmmo;
+}
+
+int32 AFirearm::GetReloadedAmmoValue() const
+{
+	return ReloadedAmmo;
+}
+
 float AFirearm::GetFinalAccuracty() const
 {
 	return 1 - FinalAccuracy;
