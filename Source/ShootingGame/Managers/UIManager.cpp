@@ -90,6 +90,8 @@ void UUIManager::SetUIState(EHUDState state)
 		HideUI(EHUDState::MainMenu);
 		ShowUI(EHUDState::Archivements);
 		break;
+	case EHUDState::InGameBase:
+		ShowUI(EHUDState::InGameBase);
 	default:
 		break;
 	}
