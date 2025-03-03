@@ -16,6 +16,12 @@ void UInGame::NativeConstruct()
 	{
 		remainingAmmoText->SetText(FText::FromString(FString::Printf(TEXT("0"))));
 	}
+
+	if (currentWeapon)
+	{
+		currentWeapon->SetText(FText::FromString(FString::Printf(TEXT("Fist"))));
+	}
+
 }
 
 
@@ -35,5 +41,13 @@ void UInGame::UpdateAmmoWidget(int32 LoadedAmmo, int32 RemainingAmmo)
 	if (remainingAmmoText)
 	{
 		remainingAmmoText->SetText(FText::FromString(FString::Printf(TEXT("%d"), RemainingAmmo)));
+	}
+}
+
+void UInGame::PrintCurrentWeapon(FName WeaponType)
+{
+	if (currentWeapon)
+	{
+		currentWeapon->SetText(FText::FromString(WeaponType.ToString()));
 	}
 }

@@ -15,6 +15,8 @@ class SHOOTINGGAME_API UInGame : public UUserWidget
 public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void UpdateAmmoWidget(int32 LoadedAmmo, int32 ReaminingAmmo);
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void PrintCurrentWeapon(FName WeaponType);
 
 protected:
 	virtual void NativeConstruct() override;
@@ -24,4 +26,6 @@ private:
 	UTextBlock* loadedAmmoText;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* remainingAmmoText;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* currentWeapon;
 };
