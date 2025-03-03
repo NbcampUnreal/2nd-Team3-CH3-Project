@@ -6,6 +6,8 @@
 
 class AFirearm;
 class UProjectileMovementComponent;
+class USoundAttenuation;
+class UNiagaraSystem;
 
 UCLASS()
 class SHOOTINGGAME_API ABullet : public AActor
@@ -30,9 +32,15 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	UProjectileMovementComponent* projectileMovement;
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	UParticleSystem* hitEffect;
+	UNiagaraSystem* hitEffect;
+	UPROPERTY(EditDefaultsOnly, Category = "Effect")
+	UNiagaraSystem* hitStaticEffect;
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	USoundBase* hitSound;
+	UPROPERTY()
+	USoundAttenuation* AttenuationSetting;
+	UPROPERTY()
+	UDecalComponent* DecalComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	UMaterialInterface* hitDecal;
 

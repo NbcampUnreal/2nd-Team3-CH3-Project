@@ -2,7 +2,12 @@
 
 #include "Weapon/Bullet.h"
 #include "Weapon/Firearm.h"
+#include "Monster/BaseMonster.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/DecalComponent.h"
+#include "Sound/SoundAttenuation.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 ABullet::ABullet()
@@ -16,13 +21,15 @@ ABullet::ABullet()
 	bulletMesh->BodyInstance.bUseCCD = true;
 
 	projectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	projectileMovement->InitialSpeed = 3000.0f;
-	projectileMovement->MaxSpeed = 3000.0f;
+	projectileMovement->InitialSpeed = 7000.0f;
+	projectileMovement->MaxSpeed = 7000.0f;
 	projectileMovement->bRotationFollowsVelocity = true;
 	projectileMovement->bShouldBounce = false;
 	projectileMovement->ProjectileGravityScale = 1.0f;
 
 	bulletMesh->OnComponentHit.AddDynamic(this, &ABullet::onHit);
+
+	AttenuationSetting = LoadObject<USoundAttenuation>(nullptr, TEXT("/Game/Weapons/Audio/SA_BodyShot.SA_BodyShot"));
 }
 
 void ABullet::ActivateBullet(FVector SpawnLocation, FRotator SpawnRotation, float Speed)
@@ -83,17 +90,56 @@ void ABullet::onHit(
 
 			if (hitEffect)
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), hitEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				if (OtherActor->IsA<ABaseMonster>())
+				{
+					UNiagaraComponent* Hit = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+						GetWorld(),
+						hitEffect,
+						GetActorLocation(),
+						GetActorRotation(),
+						FVector(1.0f), true);
+				}
+				else if(hitStaticEffect)
+				{
+					UNiagaraComponent* Hit = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+						GetWorld(),
+						hitStaticEffect,
+						GetActorLocation(),
+						GetActorRotation(),
+						FVector(1.0f), true);
+				}
+
 			}
 
 			if (hitDecal)
 			{
-				UGameplayStatics::SpawnDecalAtLocation(GetWorld(), hitDecal, FVector(10.0f), Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+				if (OtherActor->IsA<ABaseMonster>())
+				{
+					USkeletalMeshComponent* EnemyMesh = Cast<USkeletalMeshComponent>(OtherComp);
+					if (EnemyMesh)
+					{
+						if (DecalComp)
+						{
+							// 보류. 몬스터에서 작업 필요. BaseMonster->ApplyBulletDecal(Hit.Location, Hit.ImpactNormal.Rotation());
+						}
+					}
+					//DecalComp = UGameplayStatics::SpawnDecalAttached(hitDecal, FVector(5.0f, 5.0f, 5.0f), OtherComp, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepRelativeOffset, 5.0f);
+				}
+				
+				else
+				{
+					DecalComp = UGameplayStatics::SpawnDecalAttached(hitDecal, FVector(3.0f, 3.0f, 3.0f), OtherComp, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition, 5.0f);
+
+					if (DecalComp)
+					{
+						DecalComp->SetFadeScreenSize(0.001f);
+					}
+				}
 			}
 
-			if (hitSound)
+			if (hitSound && AttenuationSetting)
 			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), hitSound, Hit.ImpactPoint);
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), hitSound, Hit.ImpactPoint, 1.0f, 1.0f, 0.0f, AttenuationSetting);
 			}
 		}
 
