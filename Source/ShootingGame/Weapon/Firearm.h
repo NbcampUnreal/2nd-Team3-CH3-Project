@@ -8,6 +8,7 @@ class AMagazine;
 class ABullet;
 class AParts;
 class ASuppressor;
+class UUIManager;
 
 UCLASS()
 class SHOOTINGGAME_API AFirearm : public ABaseWeapon
@@ -29,6 +30,8 @@ public:
 	UAnimSequence* FireAnim;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairTexture;
+	UPROPERTY(Transient)
+	UUIManager* UIManager;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void EquipParts(AParts* Parts);
@@ -39,7 +42,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	virtual int32 GetCurrentAmmoValue() const;
 
-	//============ ·Î±ë¿ë ÃßÈÄ »èÁ¦ ¹«°ü ===================
+	//============ ï¿½Î±ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ===================
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	virtual int32 GetMaxReloadedAmmoValue() const;
 	UFUNCTION(BlueprintPure, Category = "Weapon")
@@ -50,6 +53,8 @@ public:
 	virtual void DetachParts(FName SocketName);
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	virtual float GetFinalAccuracty() const;
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void UpdateAmmoWidget();
 
 	virtual void Attack() override;
 

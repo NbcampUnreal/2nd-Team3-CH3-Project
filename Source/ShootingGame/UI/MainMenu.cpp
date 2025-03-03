@@ -12,7 +12,7 @@ void UMainMenu::NativeConstruct()
 	{
 		uiManager = GetGameInstance()->GetSubsystem<UUIManager>();
 
-		// ¹öÆ°ÀÌ nullptrÀÌ ¾Æ´Ò ¶§¸¸ ¹ÙÀÎµù
+		// ï¿½ï¿½Æ°ï¿½ï¿½ nullptrï¿½ï¿½ ï¿½Æ´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Îµï¿½
 		if (GameStartButton)
 		{
 			GameStartButton->OnClicked.AddDynamic(this, &UMainMenu::OnClickedGameStart);
@@ -46,6 +46,8 @@ void UMainMenu::OnClickedGameStart()
 			UHexboundGameInstance* hexboundGameInstance = Cast<UHexboundGameInstance>(gameInstance);
 			if (hexboundGameInstance) hexboundGameInstance->OpenLevel(ELevel::DummyLevel);
 		}
+
+		uiManager->SetUIState(EHUDState::InGameBase);
 
 	}
 }
