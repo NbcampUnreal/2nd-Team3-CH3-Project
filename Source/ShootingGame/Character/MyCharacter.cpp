@@ -11,7 +11,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/ChildActorComponent.h"
-
+#include "UI/HexPlayerHUD.h"
+#include "Blueprint/UserWidget.h"
 #include "Core/HexboundGameInstance.h"
 #include "Managers/UIManager.h"
 
@@ -55,22 +56,29 @@ AMyCharacter::AMyCharacter()
 	Magazine = CreateDefaultSubobject<UChildActorComponent>(TEXT("Magazine"));
 }
 
-//void AMyCharacter::BeginPlay()
-//{
-//	Super::BeginPlay();
-//
-//	// 기본 무기 장착
-//	//if (DefaultWeaponClass)
-//	//{
-//	//	EquippedWeapon = GetWorld()->SpawnActor<ABaseWeapon>(DefaultWeaponClass);
-//	//	if (EquippedWeapon)
-//	//	{
-//	//		EquippedWeapon->AttachWeaponToCharacter(this);
-//	//	}
-//	//}
-//
-//	
-//}
+void AMyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (HUDWidgetClass)
+	{
+		HUDWidget = CreateWidget<UHexPlayerHUD>(GetWorld(), HUDWidgetClass);
+		if (HUDWidget)
+		{
+			HUDWidget->AddToViewport();
+
+			// 초기 체력 반영
+			HUDWidget->UpdateHealth(Health, MaxHealth);
+
+			// 초기 탄약 반영 (필요하다면)
+			// HUDWidget->UpdateAmmo(CurrentAmmo, MaxAmmo);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("HUDWidgetClass is NULL!"));
+	}
+}
 
 void AMyCharacter::Tick(float DeltaTime)
 {
@@ -329,8 +337,8 @@ void AMyCharacter::ToggleFirstPerson()
 		CameraComp->AttachToComponent(SpringArmComp, FAttachmentTransformRules::SnapToTargetIncludingScale);
 
 
-		SpringArmComp->TargetArmLength = 300.f;
-		SpringArmComp->SetRelativeLocation(FVector(0.f, 25.f, 52.f));
+		SpringArmComp->TargetArmLength = 75.f;
+		SpringArmComp->SetRelativeLocation(FVector(0.f, 45.f, 52.f));
 		CameraComp->bUsePawnControlRotation = false;
 	}
 }
@@ -348,8 +356,22 @@ void AMyCharacter::TryReload()
 		if (equippedWeapon)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
-			equippedWeapon->Reload(); // 무기의 Attack 함수 호출
 
+			if (ReloadSequence) // ReloadSequence는 UAnimSequence* 타입 변수입니다.
+			{
+				if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+				{
+					UAnimMontage* MontageInstance = AnimInstance->PlaySlotAnimationAsDynamicMontage(ReloadSequence, FName("DefaultSlot"), 0.2f, 0.2f, 1.0f);
+					if (MontageInstance)
+					{
+						float Duration = MontageInstance->GetPlayLength();
+						// Duration을 활용해서 재장전 로직 후속 처리를 할 수 있습니다.
+					}
+				}
+			}
+
+			equippedWeapon->Reload(); // 무기의 Attack 함수 호출
+			UE_LOG(LogTemp, Error, TEXT("test"));
 			int32 value = equippedWeapon->GetCurrentAmmoValue();
 
 			LogFireAmmoState(equippedWeapon);	// 로깅용 => 추후 삭제 필요
@@ -538,7 +560,7 @@ void AMyCharacter::TryPickUp()
 void AMyCharacter::CharacterTakeDamage(float DamageAmount)
 {
 	Health -= DamageAmount;
-	Health = FMath::Max(Health, 0.0f);
+	Health = FMath::Clamp(Health, 0.0f, MaxHealth);
 	UE_LOG(LogTemp, Warning, TEXT("체력: %f"), Health);
 	if (GEngine)
 	{
@@ -547,6 +569,10 @@ void AMyCharacter::CharacterTakeDamage(float DamageAmount)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("NULL"));
+	}
+	if (HUDWidget)
+	{
+		HUDWidget->UpdateHealth(Health, MaxHealth);
 	}
 }
 
@@ -573,6 +599,14 @@ void AMyCharacter::LogFireAmmoState(AFirearm* fireWeapon)
 			fireWeapon->GetCurrentAmmoValue(),
 			fireWeapon->GetReloadedAmmoValue(),
 			fireWeapon->GetMaxReloadedAmmoValue()));
+}
+
+void AMyCharacter::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
+{
+	if (HUDWidget)
+	{
+		HUDWidget->UpdateAmmo(CurrentAmmo, MaxAmmo);
+	}
 }
 
 

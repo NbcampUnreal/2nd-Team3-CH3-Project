@@ -37,13 +37,13 @@ public:
 
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
-	float MasterVolume = 1.0f;
+	float MasterVolume = 0.5f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
-	float SFXVolume = 1.0f;
+	float SFXVolume = 0.5f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
-	float MusicVolume = 1.0f;
+	float MusicVolume = 0.5f;
 
 	// 볼륨 설정 함수
 	UFUNCTION(BlueprintCallable, Category = "Audio")

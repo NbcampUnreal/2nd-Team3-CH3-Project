@@ -11,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Item/Item.h"
 
 #include "Core/HexboundGameInstance.h"
 #include "Core/HexboundPlayerController.h"
@@ -107,6 +108,30 @@ void ADefaultCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void ADefaultCharacter::OnInputPickupKey()
+{
+
+	// 겹친 액터들을 저장할 배열
+	TArray<AActor*> OverlappingActors;
+
+	// GetOverlappingActors를 호출하여 충돌된 액터들을 배열에 저장
+	GetOverlappingActors(OverlappingActors);
+
+	// 겹친 액터들 중 Item을 찾아서 삭제
+	for (AActor* Actor : OverlappingActors)
+	{
+		// Item만 필터링
+		if (Actor->IsA(AItem::StaticClass())) // Item이 AActor로부터 상속된 클래스라면
+		{
+			// 아이템 삭제
+			Actor->Destroy();
+			UE_LOG(LogTemp, Warning, TEXT("Find target"));
+		}
+	}
+
+	
 }
 
 void ADefaultCharacter::OnInputInventoryKey()
@@ -218,8 +243,15 @@ void ADefaultCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ADefaultCharacter::Look);
 
+		// Pickup
+		EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputPickupKey);
+
+		// Inventory
 		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputInventoryKey);
+
+		// ESC
 		EnhancedInputComponent->BindAction(SettingAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputESCKey);
+
 	}
 	else
 	{

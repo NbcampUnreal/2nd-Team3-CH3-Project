@@ -2,21 +2,20 @@
 
 
 #include "DefaultGameMode.h"
-#include "PlayerHUD.h"
 #include "GameFramework/HUD.h"
 #include "../Character/MyCharacter.h"
 #include "../Character/MyPlayerController.h"
 
 ADefaultGameMode::ADefaultGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/DefaultCharacter/Blueprints/BP_DefaultCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
-	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
-	}
+	//static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/DefaultCharacter/Blueprints/BP_DefaultCharacter"));
+	//if (PlayerPawnBPClass.Class != NULL)
+	//{
+	//	DefaultPawnClass = PlayerPawnBPClass.Class;
+	//}
 
 	//캐릭터 테스트를 위한 코드
-	/*static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Characters/Blueprints/BP_MyCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Characters/Blueprints/BP_MyCharacter"));
 	if (PlayerPawnBPClass.Succeeded())
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
@@ -26,9 +25,4 @@ ADefaultGameMode::ADefaultGameMode()
 	{
 		PlayerControllerClass = PlayerControllerBPClass.Class;
 	}
-	static ConstructorHelpers::FClassFinder<AHUD> HUDClassBP(TEXT("/Game/Characters/Blueprints/BP_PlayerHUD"));
-	if (HUDClassBP.Succeeded())
-	{
-		HUDClass = HUDClassBP.Class;
-	}*/
 }

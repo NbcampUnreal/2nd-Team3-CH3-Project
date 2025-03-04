@@ -9,6 +9,11 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/HexboundGameInstance.h"
+#include "Character/MyPlayerController.h"
+#include "Character/MyCharacter.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/InGame.h"
+#include "Managers/UIManager.h"
 
 AFirearm::AFirearm()
 {
@@ -18,7 +23,7 @@ AFirearm::AFirearm()
 	Bullet = nullptr;											// 사용할 프로젝타일 클래스
 	Suppressor = nullptr;										// 소음기 클래스
 	CrosshairTexture = nullptr;									// 조준십자 텍스쳐
-	BulletSpeed = 3000.0f;										// 프로젝타일에 전달할 탄 스피드
+	BulletSpeed = 7000.0f;										// 프로젝타일에 전달할 탄 스피드
 	MaxAmmo = 200;												// 최대 탄 소지량
 	CurrentAmmo = 0;											// 현재 탄 소지량
 	MaxReloadedAmmo = 0;										// 최대 장전 탄수
@@ -30,6 +35,7 @@ AFirearm::AFirearm()
 	bIsLoadingComplete = true;									// 재장전 중 여부
 	bIsMagazineAttached = false;								// 탄창 결합 여부
 	bIsSuppressorInstalled = false;								// 소음기 결합 여부
+	UIManager = nullptr;
 }
 
 void AFirearm::Attack()
@@ -75,6 +81,7 @@ void AFirearm::Attack()
 			}
 
 			ReloadedAmmo--;
+			UpdateAmmoWidget();
 		}
 
 		Super::Attack();
@@ -98,27 +105,33 @@ void AFirearm::Fire()
 {
 	if (BulletClass)
 	{
-		FVector SpawnLocation = GetActorLocation();
-		FRotator SpawnRotation = GetActorRotation();
+		FVector ControllerDirection;
+		FVector FinalLocation;
 		
-		if (WeaponMesh && WeaponMesh->DoesSocketExist("MuzzleSocket"))
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 		{
-			SpawnLocation = WeaponMesh->GetSocketLocation("MuzzleSocket");
-			SpawnRotation = WeaponMesh->GetSocketRotation("MuzzleSocket");
+			if (AMyPlayerController* Controller = Cast<AMyPlayerController>(PlayerController))
+			{
+				FRotator ControlRotation = Controller->GetControlRotation();
+				ControllerDirection = ControlRotation.Vector();
 
+				FVector CameraLocation = Controller->PlayerCameraManager->GetCameraLocation();
+				FinalLocation = CameraLocation + (ControllerDirection * 20);
+				Controller->SetControlRotation(ControlRotation + FRotator(5.0f, 0.0f, 0.0f));
+			}			
 		}
-		FinalAccuracy = MaxSpreadAngle * (1 - OriginalAccuracy);
-		FVector BaseDirection = SpawnRotation.Vector();
-		FVector SpreadDirection = FMath::VRandCone(BaseDirection, FMath::DegreesToRadians(FinalAccuracy));
-		FRotator FinalRotation = SpreadDirection.Rotation();
 
+		FinalAccuracy = MaxSpreadAngle * (1 - OriginalAccuracy);
+
+		FVector SpreadDirection = FMath::VRandCone(ControllerDirection, FMath::DegreesToRadians(FinalAccuracy));
+		FRotator FinalRotation = SpreadDirection.Rotation();
 
 		if (BulletPool.Num() > 0)
 		{
 			Bullet = BulletPool.Pop();
 			if (Bullet && Bullet->IsValidLowLevel())
 			{
-				Bullet->ActivateBullet(SpawnLocation, FinalRotation, BulletSpeed);
+				Bullet->ActivateBullet(FinalLocation, FinalRotation, BulletSpeed);
 			}
 		}
 
@@ -126,7 +139,7 @@ void AFirearm::Fire()
 		{		
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
-			Bullet = GetWorld()->SpawnActor<ABullet>(BulletClass, SpawnLocation, FinalRotation, SpawnParams);
+			Bullet = GetWorld()->SpawnActor<ABullet>(BulletClass, FinalLocation, FinalRotation, SpawnParams);
 	
 			if (!Bullet)
 			{
@@ -149,6 +162,16 @@ void AFirearm::BeginPlay()
 	Super::BeginPlay();
 
 	OriginalAttackSound = AttackSound;	// 소음기 탈부착 대비 사운드 저장
+
+	if (UHexboundGameInstance* GameInstance = Cast<UHexboundGameInstance>(GetGameInstance()))
+	{
+		UIManager = GameInstance->GetSubsystem<UUIManager>();
+		if (UIManager)
+		{
+			UpdateAmmoWidget(); // 초기 Ammo 상태 반영
+		}
+	}
+
 }
 
 void AFirearm::Reload()
@@ -173,10 +196,12 @@ void AFirearm::Reload()
 				CurrentAmmo = FMath::Max(CurrentAmmo - ReloadValue, 0);
 				ReloadedAmmo = MaxReloadedAmmo;
 				bIsLoadingComplete = true;
+				UpdateAmmoWidget();
 			},
 			ReloadTime,
 			false
 		);
+
 	}
 }
 
@@ -203,6 +228,7 @@ float AFirearm::GetFinalAccuracty() const
 void AFirearm::AddAmmo(int32 AmmoToAdd)
 {
 	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MaxAmmo);
+	UpdateAmmoWidget();
 }
 
 void AFirearm::EquipParts(AParts* Parts) // 파츠를 파츠에 저장된 소켓명에 따라 먼저 소켓에 부착 후 클래스 판별하여 기능 적용
@@ -218,6 +244,7 @@ void AFirearm::EquipParts(AParts* Parts) // 파츠를 파츠에 저장된 소켓
 			MaxReloadedAmmo = Magazine->GetMagazineCapacity();
 			ReloadedAmmo = MaxReloadedAmmo;
 			bIsMagazineAttached = true;
+			UpdateAmmoWidget();
 		}
 
 		if (Parts->IsA(ASuppressor::StaticClass()))
@@ -259,5 +286,25 @@ void AFirearm::DetachParts(FName SocketName) // 파츠 결합 전 기존 파트 
 		Suppressor = nullptr;
 		bIsSuppressorInstalled = false;
 		this->AttackSound = OriginalAttackSound;
+	}
+}
+
+void AFirearm::UpdateAmmoWidget()
+{
+	if (UIManager)
+	{
+		UUserWidget* InGameWidgetInstance = UIManager->WidgetInstances.FindRef(EHUDState::InGameBase);
+		if (UInGame* InGameWidget = Cast<UInGame>(InGameWidgetInstance))
+		{
+			InGameWidget->UpdateAmmoWidget(ReloadedAmmo, CurrentAmmo);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGame widget not found in UIManager"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("UIManager is null in AFirearm"));
 	}
 }

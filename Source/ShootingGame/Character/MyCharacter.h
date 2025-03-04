@@ -20,12 +20,28 @@ class SHOOTINGGAME_API AMyCharacter : public ACharacter
 
 public:
 	AMyCharacter();
-	//void BeginPlay() override;
+	void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
 	USpringArmComponent* SpringArmComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
 	UCameraComponent* CameraComp;
+
+	//체력
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float Health = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<class UHexPlayerHUD> HUDWidgetClass;
+
+	UPROPERTY()
+	UHexPlayerHUD* HUDWidget;
+
+	UFUNCTION(BlueprintCallable, Category = "Ammo")
+	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 
 	// ====================== 설정, 인벤토리, 아이템 상호작용  ===========================
 	bool bIsShowInventory;
@@ -65,6 +81,9 @@ protected:
 	void StopCrouch(const FInputActionValue& value);
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	bool GetIsCrouching() const;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimSequence* ReloadSequence;
 
 	// ======================  캐릭터 공격, 줌  ===========================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -129,8 +148,6 @@ private:
 	FRotator SavedCameraRotation;
 
 
-	UPROPERTY(EditAnywhere, Category = "Health")
-	float Health = 100.0f;
 	float MeleeDamage = 3.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")

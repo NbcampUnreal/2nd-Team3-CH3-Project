@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Animation/AnimInstance.h"
 #include "Components/ChildActorComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABaseMonster::ABaseMonster()
@@ -108,26 +109,34 @@ void ABaseMonster::OnDeath()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster OnDeath")));
 	isDeath = true;
+	GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+	GetMesh()->Stop();
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->WakeAllRigidBodies();
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
 
-	AMonsterAIController* AIController = Cast<AMonsterAIController>(GetController());
-	if (AIController)
-	{
-		AIController->UnPossess(); // AI 컨트롤러 비활성화
-	}
+	SetLifeSpan(5.0f);
+	//AMonsterAIController* AIController = Cast<AMonsterAIController>(GetController());
+	//if (AIController)
+	//{
+	//	AIController->UnPossess(); // AI 컨트롤러 비활성화
+	//}
 
-	if (DeathMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &ABaseMonster::OnDeathMontageEnded);
+	//if (DeathMontage)
+	//{
+	//	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	//	if (AnimInstance)
+	//	{
+	//		FOnMontageEnded EndDelegate;
+	//		EndDelegate.BindUObject(this, &ABaseMonster::OnDeathMontageEnded);
 
-			AnimInstance->Montage_Play(DeathMontage);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate);
-			return;
-		}
-	}
+	//		AnimInstance->Montage_Play(DeathMontage);
+	//		AnimInstance->Montage_SetEndDelegate(EndDelegate);
+	//		return;
+	//	}
+	//}
 }
 
 Item* ABaseMonster::DropItem()
