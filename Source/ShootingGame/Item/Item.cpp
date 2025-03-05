@@ -45,21 +45,18 @@ void AItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 {
 	if (OtherActor && OtherActor != this)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Overlap Begin: %s"), *OtherActor->GetName());
+		/*UE_LOG(LogTemp, Warning, TEXT("Overlap Begin: %s"), *OtherActor->GetName());*/
+		OverheadWidget->SetVisibility(true);
 	}
-
-	OverheadWidget->SetVisibility(true);
-
 }
 
 void AItem::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (OtherActor && OtherActor != this)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Overlap End: %s"), *OtherActor->GetName());
+		/*UE_LOG(LogTemp, Warning, TEXT("Overlap End: %s"), *OtherActor->GetName());*/
+		OverheadWidget->SetVisibility(false);
 	}
-
-	OverheadWidget->SetVisibility(false);
 }
 
 // Called every frame
@@ -67,5 +64,10 @@ void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+UWidgetComponent* AItem::GetHud()
+{
+	return OverheadWidget;
 }
 
