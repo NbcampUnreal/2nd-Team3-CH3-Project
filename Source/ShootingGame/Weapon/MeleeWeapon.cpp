@@ -12,15 +12,23 @@ AMeleeWeapon::AMeleeWeapon()
 	{
 		WeaponMesh->SetSkeletalMesh(MeleeWeapon);
 	}
+
 }
 
-void AMeleeWeapon::Attack()
+void AMeleeWeapon::BeginPlay()
 {
-	Super::Attack();
+	Super::BeginPlay();
+
 	if (USkeletalMeshComponent* SkeletalMesh = FindComponentByClass<USkeletalMeshComponent>())
 	{
 		SkeletalMesh->OnComponentBeginOverlap.AddDynamic(this, &AMeleeWeapon::OnEnemyOverlap);
 	}
+}
+
+
+void AMeleeWeapon::Attack()
+{
+	Super::Attack();
 }
 
 void AMeleeWeapon::OnEnemyOverlap(

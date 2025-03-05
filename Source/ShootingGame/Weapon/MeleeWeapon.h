@@ -12,6 +12,8 @@ class SHOOTINGGAME_API AMeleeWeapon : public ABaseWeapon
 public:
 	AMeleeWeapon();
 
+	virtual void BeginPlay() override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* HitEffect;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
