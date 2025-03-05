@@ -21,7 +21,7 @@ AMonsterAIController::AMonsterAIController()
 
 	// Sight 설정
 	SightConfig->SightRadius = 800.0f;
-	SightConfig->LoseSightRadius = 1000.0f;
+	SightConfig->LoseSightRadius = 1600.0f;
 	SightConfig->PeripheralVisionAngleDegrees = 80.0f;
 
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
