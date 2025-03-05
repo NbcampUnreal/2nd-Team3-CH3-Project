@@ -58,6 +58,7 @@ ADefaultCharacter::ADefaultCharacter()
 
 	MaxHealth = 100.0f;
 	Health = MaxHealth;
+	Item = nullptr;
 
 }
 
@@ -114,35 +115,36 @@ void ADefaultCharacter::Look(const FInputActionValue& Value)
 void ADefaultCharacter::OnInputPickupKey()
 {
 
-	// 겹친 액터들을 저장할 배열
-	TArray<AActor*> OverlappingActors;
+	//// 겹친 액터들을 저장할 배열
+	//TArray<AActor*> OverlappingActors;
 
-	// GetOverlappingActors를 호출하여 충돌된 액터들을 배열에 저장
-	//(TArray<AActor*>& OutOverlappingActors, TSubclassOf<AActor> ClassFilter)
-	GetOverlappingActors(OverlappingActors, AItem::StaticClass());
+	//// GetOverlappingActors를 호출하여 충돌된 액터들을 배열에 저장
+	////(TArray<AActor*>& OutOverlappingActors, TSubclassOf<AActor> ClassFilter)
+	//GetOverlappingActors(OverlappingActors, AItem::StaticClass());
 
-	if (OverlappingActors.Num() > 0)
-	{
-		AActor* FirstActor = OverlappingActors[0]; // 첫 번째 액터 가져오기
+	//if (OverlappingActors.Num() > 0)
+	//{
+	//	AActor* FirstActor = OverlappingActors[0]; // 첫 번째 액터 가져오기
 
-		AItem* FirstItem = Cast<AItem>(OverlappingActors[0]);
+	//	AItem* FirstItem = Cast<AItem>(OverlappingActors[0]);
 
-		if (FirstItem)
-		{
-			//FirstItem->GetHud()->SetVisibility(false);
-			FirstItem->Destroy();  // 아이템 삭제
-		}
+	//	if (FirstItem)
+	//	{
+	//		//FirstItem->GetHud()->SetVisibility(false);
+	//		//FirstItem->Destroy();  // 아이템 삭제
+	//		Item = FirstItem;
+	//	}
 
-		for (int32 i = 1; i < OverlappingActors.Num(); ++i)
-		{
-			AItem* Temp = Cast<AItem>(OverlappingActors[i]);
-			if (Temp && Temp->GetHud())
-			{
-				// HUD를 활성화
-				Temp->GetHud()->SetVisibility(true);
-			}
-		}
-	}
+	//	for (int32 i = 1; i < OverlappingActors.Num(); ++i)
+	//	{
+	//		AItem* Temp = Cast<AItem>(OverlappingActors[i]);
+	//		if (Temp && Temp->GetHud())
+	//		{
+	//			// HUD를 활성화
+	//			Temp->GetHud()->SetVisibility(true);
+	//		}
+	//	}
+	//}
 }
 
 void ADefaultCharacter::OnInputInventoryKey()

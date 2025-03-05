@@ -56,6 +56,7 @@ class SHOOTINGGAME_API ADefaultCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* PickupAction;
 
+	//접촉한 아이템
 	AItem* Item;
 
 public:
