@@ -8,6 +8,7 @@ UENUM(BlueprintType)
 enum class ELevel : uint8
 {
 	MenuLevel = 0,
+	Main,
 	DummyLevel
 };
 

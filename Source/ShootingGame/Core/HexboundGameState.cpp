@@ -47,6 +47,10 @@ void AHexboundGameState::OnGameStart()
 				UIManager->SetUIState(EHUDState::MainMenu);
 				if (myPlayerController) myPlayerController->ShowCursor(true);
 				break;
+			case ELevel::Main:
+				UIManager->SetUIState(EHUDState::InGameBase);
+				if (myPlayerController) myPlayerController->ShowCursor(false);
+				break;
 			case ELevel::DummyLevel:
 				UIManager->SetUIState(EHUDState::InGameBase);
 				if (myPlayerController) myPlayerController->ShowCursor(false);

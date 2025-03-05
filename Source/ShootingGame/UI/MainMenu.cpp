@@ -44,7 +44,7 @@ void UMainMenu::OnClickedGameStart()
 		if (UGameInstance* gameInstance = GetGameInstance())
 		{
 			UHexboundGameInstance* hexboundGameInstance = Cast<UHexboundGameInstance>(gameInstance);
-			if (hexboundGameInstance) hexboundGameInstance->OpenLevel(ELevel::DummyLevel);
+			if (hexboundGameInstance) hexboundGameInstance->OpenLevel(ELevel::Main);
 		}
 
 		uiManager->SetUIState(EHUDState::InGameBase);
