@@ -15,6 +15,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Core/HexboundGameInstance.h"
 #include "Managers/UIManager.h"
+#include "TimerManager.h"
 
 AMyCharacter::AMyCharacter()
 {
@@ -103,33 +104,6 @@ void AMyCharacter::Tick(float DeltaTime)
 		float NewYawOffset = CurrentYaw - PreviousYaw;
 		NewYawOffset = FMath::Clamp(NewYawOffset, -90.f, 90.f);
 		YawOffset = NewYawOffset;
-
-		//if (FMath::Abs(YawOffset) > 5.f)
-		//{
-		//	PreviousYaw = CurrentYaw;
-		//	UE_LOG(LogTemp, Warning, TEXT("Updated PreviousYaw: %f"), PreviousYaw);
-		//}
-
-		//if (FMath::Abs(YawOffset) < 5.0f)
-		//{
-		//	YawOffset = FMath::FInterpTo(YawOffset, 0.f, DeltaTime, 5.0f);
-		//}
-
-		//if (FMath::Abs(YawOffset) > 45.f)
-		//{
-		//	if (!bIsTurning)
-		//	{
-		//		PlayAnimMontage(Turn90Anim);
-		//		bIsTurning = true;
-		//	}
-		//}
-		//else if (bIsTurning && FMath::Abs(YawOffset) < 5.f)
-		//{
-		//	StopAnimMontage(Turn90Anim);
-		//	bIsTurning = false;
-		//}
-
-		/*UE_LOG(LogTemp, Warning, TEXT("YawOffset: %f, PreviousYaw: %f"), YawOffset, PreviousYaw);*/
 	}
 	if (bInterpToThirdPerson)
 	{
@@ -350,38 +324,45 @@ void AMyCharacter::TryReload()
 
 	if (WeaponSlot)
 	{
-		// TO DO : Equipped Weapon Type 별 캐스팅 분리 or 액션 분리
 		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
-		
+
 		if (equippedWeapon)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
 
-			if (ReloadSequence) // ReloadSequence는 UAnimSequence* 타입 변수입니다.
+			StartReload();  //bIsReloading = true (재장전 시작)
+
+			if (ReloadSequence)  //재장전 애니메이션이 존재하는 경우
 			{
 				if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 				{
-					UAnimMontage* MontageInstance = AnimInstance->PlaySlotAnimationAsDynamicMontage(ReloadSequence, FName("DefaultSlot"), 0.2f, 0.2f, 1.0f);
+					UAnimMontage* MontageInstance = AnimInstance->PlaySlotAnimationAsDynamicMontage(
+						ReloadSequence,
+						FName("DefaultSlot"),
+						0.2f,  //Blending 시작 시간 (최적화)
+						0.05f, //Blending 종료 시간 (T-포즈 최소화)
+						1.0f
+					);
+
 					if (MontageInstance)
 					{
 						float Duration = MontageInstance->GetPlayLength();
-						// Duration을 활용해서 재장전 로직 후속 처리를 할 수 있습니다.
+						float AdjustedTime = FMath::Max(Duration - 0.1f, 0.05f); 
+
+						GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::StartReload, 0.1f, false);
+						GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::EndReload, AdjustedTime, false);
 					}
 				}
 			}
 
-			equippedWeapon->Reload(); // 무기의 Attack 함수 호출
-			UE_LOG(LogTemp, Error, TEXT("test"));
-			int32 value = equippedWeapon->GetCurrentAmmoValue();
-
-			LogFireAmmoState(equippedWeapon);	// 로깅용 => 추후 삭제 필요
+			equippedWeapon->Reload();
+			LogFireAmmoState(equippedWeapon);
 		}
 		else
 		{
 			UE_LOG(LogTemp, Error, TEXT("No Weapon Equipped"));
 		}
 	}
-
 }
 
 void AMyCharacter::AttachParts()
@@ -557,24 +538,76 @@ void AMyCharacter::TryPickUp()
 	UE_LOG(LogTemp, Warning, TEXT("Try PickUp Item"));
 }
 
+//void AMyCharacter::CharacterTakeDamage(float DamageAmount)
+//{
+//	Health -= DamageAmount;
+//	Health = FMath::Clamp(Health, 0.0f, MaxHealth);
+//	UE_LOG(LogTemp, Warning, TEXT("체력: %f"), Health);
+//	if (GEngine)
+//	{
+//		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
+//	}
+//	else
+//	{
+//		UE_LOG(LogTemp, Warning, TEXT("NULL"));
+//	}
+//	if (HUDWidget)
+//	{
+//		HUDWidget->UpdateHealth(Health, MaxHealth);
+//	}
+//}
+
 void AMyCharacter::CharacterTakeDamage(float DamageAmount)
 {
 	Health -= DamageAmount;
 	Health = FMath::Clamp(Health, 0.0f, MaxHealth);
+
 	UE_LOG(LogTemp, Warning, TEXT("체력: %f"), Health);
+
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("NULL"));
-	}
+
 	if (HUDWidget)
 	{
 		HUDWidget->UpdateHealth(Health, MaxHealth);
 	}
+
+	//피격 애니메이션 실행 (HitReactionSequence 사용)
+	if (HitReactionSequence && Health > 0.0f)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->PlaySlotAnimationAsDynamicMontage(
+				HitReactionSequence,
+				FName("HitReactionSlot"),
+				0.2f,  // Blend In
+				0.2f,  // Blend Out
+				1.0f   // 재생 속도
+			);
+		}
+	}
+	bIsHitReacting = true;
+	GetWorldTimerManager().SetTimer(HitResetTimerHandle, this, &AMyCharacter::ResetHitState, 1.0f, false);
+	//체력이 0이면 사망 처리
+	if (Health <= 0.0f)
+	{
+		OnPlayerDeath();
+	}
 }
+
+bool AMyCharacter::GetIsHitReacting() const
+{
+	return bIsHitReacting;
+}
+
+void AMyCharacter::ResetHitState()
+{
+	bIsHitReacting = false;
+}
+
 
 float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
@@ -588,9 +621,55 @@ float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 void AMyCharacter::OnPlayerDeath()
 {
 	// TO DO : Character Death Behavior or Show Finish Widget
+	UE_LOG(LogTemp, Warning, TEXT("character dead!"));
 
+	bIsDead = true;
+
+	// 캐릭터가 죽었을 때, 컨트롤러 입력 막기
+	AController* PlayerController = GetController();
+	if (PlayerController)
+	{
+		DisableInput(Cast<APlayerController>(PlayerController));
+	}
+
+	// 사망 애니메이션 실행 (DeathSequence 사용)
+	if (DeathSequence)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->PlaySlotAnimationAsDynamicMontage(
+				DeathSequence,
+				FName("FullBodySlot"),
+				0.2f,  // Blend In
+				0.2f,  // Blend Out
+				1.0f   // 재생 속도
+			);
+		}
+	}
+
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+
+	// 일정 시간이 지난 후 캐릭터 제거
+	GetWorldTimerManager().SetTimer(
+		DeathTimerHandle,
+		this,
+		&AMyCharacter::DestroyCharacter,
+		3.0f, // 3초 후 제거
+		false
+	);
 }
 
+bool AMyCharacter::GetIsDead() const
+{
+	return bIsDead;
+}
+
+void AMyCharacter::DestroyCharacter()
+{
+	Destroy();
+}
 
 void AMyCharacter::LogFireAmmoState(AFirearm* fireWeapon)
 {
@@ -607,6 +686,19 @@ void AMyCharacter::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
 	{
 		HUDWidget->UpdateAmmo(CurrentAmmo, MaxAmmo);
 	}
+}
+
+void AMyCharacter::StartReload()
+{
+	bIsReloading = true;
+	// AnimBP에서는 Event Blueprint Update Animation에서 이 값(bIsReloading)을 읽어
+	// Blend Poses by Bool 노드를 통해 재장전 상태에 따른 상체 애니메이션 전환을 처리합니다.
+}
+
+void AMyCharacter::EndReload()
+{
+	bIsReloading = false;
+	// 재장전 애니메이션이 끝난 후, 일반 모션으로 돌아갈 수 있도록 상태 전환 처리
 }
 
 

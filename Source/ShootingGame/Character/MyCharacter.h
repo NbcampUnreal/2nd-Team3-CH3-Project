@@ -54,6 +54,27 @@ public:
 
 	void TryPickUp();
 
+	// 재장전 애니메이션 시퀀스 (Dynamic Montage로 재생할 애니메이션)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimSequence* ReloadSequence;
+
+	// 재장전 상태 bool (AnimBP와 연동할 변수)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool bIsReloading = false;
+
+	// 재장전 함수
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void TryReload();
+
+	// 재장전 상태 전환 함수
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void StartReload();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void EndReload();
+
+
+
 protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -82,9 +103,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	bool GetIsCrouching() const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimSequence* ReloadSequence;
-
 	// ======================  캐릭터 공격, 줌  ===========================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	UChildActorComponent* WeaponSlot;
@@ -98,9 +116,17 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PerformMeleeAttack();
 
-	void TryReload();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimSequence* HitReactionSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimSequence* DeathSequence;
+
+	//void TryReload();
 	void AttachParts();
 	void TryAddAmmo();
+
+	void DestroyCharacter();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<class AParts> Parts;
@@ -125,10 +151,20 @@ protected:
 		AActor* DamageCauser) override;
 
 	void OnPlayerDeath();
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bIsDead = false;
+
+	UFUNCTION(BlueprintCallable, Category = "State")
+	bool GetIsDead() const;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bIsHitReacting = false;
+
+	UFUNCTION(BlueprintCallable, Category = "State")
+	bool GetIsHitReacting() const;
 
 	// ====================== 회전 관련  ===========================
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	UAnimMontage* Turn90Anim;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	float YawOffset;
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
@@ -174,4 +210,12 @@ private:
 
 
 	void LogFireAmmoState(class AFirearm* fireWeapon);
+
+	//재장전
+	FTimerHandle ReloadTimerHandle;
+	FTimerHandle DeathTimerHandle;
+
+	//피격
+	FTimerHandle HitResetTimerHandle;
+	void ResetHitState();
 };
