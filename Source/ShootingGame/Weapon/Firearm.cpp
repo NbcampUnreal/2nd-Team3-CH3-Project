@@ -36,6 +36,7 @@ AFirearm::AFirearm()
 	bIsMagazineAttached = false;								// 탄창 결합 여부
 	bIsSuppressorInstalled = false;								// 소음기 결합 여부
 	UIManager = nullptr;
+	bCanReload = false;
 }
 
 void AFirearm::Attack()
@@ -116,7 +117,7 @@ void AFirearm::Fire()
 				ControllerDirection = ControlRotation.Vector();
 
 				FVector CameraLocation = Controller->PlayerCameraManager->GetCameraLocation();
-				FinalLocation = CameraLocation + (ControllerDirection * 20);
+				FinalLocation = CameraLocation + (ControllerDirection * 50);
 				Controller->SetControlRotation(ControlRotation + FRotator(5.0f, 0.0f, 0.0f));
 			}			
 		}
@@ -203,6 +204,22 @@ void AFirearm::Reload()
 		);
 
 	}
+}
+
+void AFirearm::SetReloadCondition()
+{
+	if (bIsLoadingComplete && bIsMagazineAttached && CurrentAmmo > 0)
+	{
+		bCanReload = true;
+	}
+	else
+	{
+		bCanReload = false;
+	}
+}
+bool AFirearm::GetReloadCondition() const
+{
+	return bCanReload;
 }
 
 int32 AFirearm::GetCurrentAmmoValue() const
@@ -296,7 +313,7 @@ void AFirearm::UpdateAmmoWidget()
 		UUserWidget* InGameWidgetInstance = UIManager->WidgetInstances.FindRef(EHUDState::InGameBase);
 		if (UInGame* InGameWidget = Cast<UInGame>(InGameWidgetInstance))
 		{
-			InGameWidget->UpdateAmmoWidget(ReloadedAmmo, CurrentAmmo);
+			InGameWidget->UpdateAmmo(ReloadedAmmo, CurrentAmmo);
 		}
 		else
 		{

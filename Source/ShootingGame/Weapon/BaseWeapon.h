@@ -6,6 +6,8 @@
 
 class ADefaultCharacter;
 class UNiagaraSystem;
+class UUIManager;
+class AMyCharacter;
 
 UCLASS()
 class SHOOTINGGAME_API ABaseWeapon : public AActor
@@ -26,6 +28,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	FName WeaponType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UTexture2D* WeaponImage;
+	UPROPERTY(Transient)
+	UUIManager* UIManager;
 
 	UFUNCTION()
 	virtual float GetDamageValue() const;
@@ -33,6 +39,14 @@ public:
 	virtual void DealDamage(AActor* Enemy);
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Attack();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void UpdateWeaponImage();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void AttachWeaponToCharacter(ACharacter* PlayerCharacter);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void DetachWeaponFromCharacter();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	virtual void MoveToPocket(ACharacter* PlayerCharacter, FName PocketName);
 
 protected:
 	// 공격관리
@@ -43,7 +57,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "WeaponStat")
 	bool bIsCooltimeEnd;
 
-	virtual void AttachWeaponToCharacter(ADefaultCharacter* PlayerCharacter);
+
+	AMyCharacter* MyCharacter;
+
+	virtual void BeginPlay() override;
 
 private:
 

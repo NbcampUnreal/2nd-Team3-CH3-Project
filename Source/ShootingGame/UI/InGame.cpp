@@ -3,6 +3,8 @@
 #include "UI/InGame.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
+#include "Components/Image.h"
+#include "Engine/Texture2D.h"
 
 void UInGame::NativeConstruct()
 {
@@ -22,11 +24,17 @@ void UInGame::NativeConstruct()
 		currentWeapon->SetText(FText::FromString(FString::Printf(TEXT("Fist"))));
 	}
 
+	WeaponImageTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/Weapons/Images/T_FistImage.T_FistImage"));
+
+	if (WeaponUIImage)
+	{
+		WeaponUIImage->SetBrushFromTexture(WeaponImageTexture);
+	}
 }
 
 
-void UInGame::UpdateAmmoWidget(int32 LoadedAmmo, int32 RemainingAmmo)
-{
+void UInGame::UpdateAmmo(int32 LoadedAmmo, int32 RemainingAmmo)
+{	
 	if (!loadedAmmoText || !remainingAmmoText)
 	{
 		UE_LOG(LogTemp, Error, TEXT("TextBlock is NULL! UI update failed."));
@@ -44,10 +52,15 @@ void UInGame::UpdateAmmoWidget(int32 LoadedAmmo, int32 RemainingAmmo)
 	}
 }
 
-void UInGame::PrintCurrentWeapon(FName WeaponType)
+void UInGame::PrintCurrentWeapon(FName WeaponType, UTexture2D* WeaponImage)
 {
 	if (currentWeapon)
 	{
 		currentWeapon->SetText(FText::FromString(WeaponType.ToString()));
+	}
+
+	if (WeaponUIImage)
+	{
+		WeaponUIImage->SetBrushFromTexture(WeaponImage);
 	}
 }

@@ -86,12 +86,14 @@ void ABullet::onHit(
 
 		if (OtherActor && OtherActor != this)
 		{
-			gun->DealDamage(OtherActor);
+			
 
 			if (hitEffect)
 			{
 				if (OtherActor->IsA<ABaseMonster>())
 				{
+					gun->DealDamage(OtherActor);
+
 					UNiagaraComponent* Hit = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 						GetWorld(),
 						hitEffect,
