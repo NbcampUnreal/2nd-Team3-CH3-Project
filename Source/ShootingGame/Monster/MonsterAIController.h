@@ -6,6 +6,7 @@
 
 class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
+class UAISenseConfig_Damage;
 
 UCLASS()
 class SHOOTINGGAME_API AMonsterAIController : public AAIController
@@ -28,6 +29,10 @@ protected:
 	// Sight 감각 설정
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	UAISenseConfig_Sight* SightConfig;
+
+	// Damage 감각 설정
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	UAISenseConfig_Damage* DamageConfig;
 
 	// AIPerception 이벤트 핸들러
 	UFUNCTION()

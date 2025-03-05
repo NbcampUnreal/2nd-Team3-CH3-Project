@@ -1,4 +1,4 @@
-#include "Monster/MonsterAIController.h"
+ï»¿#include "Monster/MonsterAIController.h"
 #include "Monster/BaseMonster.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -7,16 +7,19 @@
 
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISenseConfig_Damage.h"
+#include "Perception/AIPerceptionSystem.h"
+
 
 AMonsterAIController::AMonsterAIController()
 {
-	// AIPerception ÄÄÆ÷³ÍÆ® »ı¼º
+	// AIPerception ì»´í¬ë„ŒíŠ¸ ìƒì„±
 	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
 
-	// Sight °¨°¢ ¼³Á¤ »ı¼º
+	// Sight ê°ê° ì„¤ì • ìƒì„±
 	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
 
-	// Sight ¼³Á¤
+	// Sight ì„¤ì •
 	SightConfig->SightRadius = 800.0f;
 	SightConfig->LoseSightRadius = 1000.0f;
 	SightConfig->PeripheralVisionAngleDegrees = 80.0f;
@@ -25,13 +28,15 @@ AMonsterAIController::AMonsterAIController()
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 
-	// AIPerception ÄÄÆ÷³ÍÆ®¿¡ Sight ¼³Á¤ Ãß°¡
+	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
+
+	// AIPerception ì»´í¬ë„ŒíŠ¸ì— Sight ì„¤ì • ì¶”ê°€
 	AIPerceptionComponent->ConfigureSense(*SightConfig);
+	AIPerceptionComponent->ConfigureSense(*DamageConfig);
 	AIPerceptionComponent->SetDominantSense(SightConfig->GetSenseImplementation());
 
-	// Perception ¾÷µ¥ÀÌÆ® ÀÌº¥Æ® ¹ÙÀÎµù
+	// Perception ì—…ë°ì´íŠ¸ ì´ë²¤íŠ¸ ë°”ì¸ë”©
 	AIPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &AMonsterAIController::OnPerceptionUpdated);
-
 
 	IdleSpeed = 200.0f;
 	ChaseSpeed = 500.0f;
@@ -57,10 +62,27 @@ void AMonsterAIController::OnPerceptionUpdated(const TArray<AActor*>& UpdatedAct
 {
 	for (AActor* actor : UpdatedActors)
 	{
-		if (actor->ActorHasTag("Player"))
+		FActorPerceptionBlueprintInfo Info;
+		AIPerceptionComponent->GetActorsPerception(actor, Info);
+
+		for (const FAIStimulus& Stimulus : Info.LastSensedStimuli)
 		{
-			CheckPlayerActor(actor);
-			break;
+			if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())			// ì‹œê° ì •ë³´ì— ì˜í•´ ì°¾ì•˜ì„ë•Œ
+			{
+				if (actor->ActorHasTag("Player"))
+				{
+					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("[Monster] Player detected by Sight!"));
+					CheckPlayerActor(actor);
+					break;
+				}
+				return;
+			}
+			else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())		// ë°ë¯¸ì§€ ì •ë³´ì— ì˜í•´ ì°¾ì•˜ì„ë•Œ
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("[Monster] Player detected by Damage!"));
+				//CheckPlayerActor(actor);
+				return;
+			}
 		}
 	}
 
@@ -75,6 +97,7 @@ void AMonsterAIController::CheckPlayerActor(AActor* sensedActor)
 	}
 
 	AActor* PlayerActor = Cast<AActor>(BlackboardComp->GetValueAsObject("PlayerActorKey"));
+
 	if (!IsValid(PlayerActor))
 	{
 		OnDetectedPlayer(BlackboardComp, sensedActor);
@@ -86,15 +109,16 @@ void AMonsterAIController::CheckPlayerActor(AActor* sensedActor)
 
 }
 
+
 void AMonsterAIController::OnDetectedPlayer(UBlackboardComponent* BlackboardComp, AActor* Actor)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Monster] Player Detected!!")));
 	BlackboardComp->SetValueAsObject("PlayerActorKey", Actor);
 
-	// Blackboard¿¡ PlayerDetected °ªÀ» false·Î ¼³Á¤
+	// Blackboardì— PlayerDetected ê°’ì„ falseë¡œ ì„¤ì •
 	BlackboardComp->SetValueAsBool("PlayerDetected", true);
 
-	// Ä³¸¯ÅÍÀÇ ÀÌµ¿ ¼Óµµ¸¦ 200À¸·Î ¼³Á¤
+	// ìºë¦­í„°ì˜ ì´ë™ ì†ë„ë¥¼ ChaseSpeedë¡œ ì„¤ì •
 	UpdateCharacterMovementSpeed(ChaseSpeed);
 }
 
@@ -105,19 +129,19 @@ void AMonsterAIController::LosePlayer(UBlackboardComponent* BlackboardComp, AAct
 	// Player Actor Reference Set nullptr
 	BlackboardComp->SetValueAsObject("PlayerActorKey", nullptr);
 
-	// Blackboard¿¡ PlayerDetected °ªÀ» false·Î ¼³Á¤
+	// Blackboardì— PlayerDetected ê°’ì„ falseë¡œ ì„¤ì •
 	BlackboardComp->SetValueAsBool("PlayerDetected", false);
 
-	// Blackboard¿¡ CanAttack °ªÀ» false·Î ¼³Á¤
+	// Blackboardì— CanAttack ê°’ì„ falseë¡œ ì„¤ì •
 	BlackboardComp->SetValueAsBool("CanAttack", false);
 
-	// Blackboard¿¡ CanAttack °ªÀ» false·Î ¼³Á¤
+	// Blackboardì— CanAttack ê°’ì„ falseë¡œ ì„¤ì •
 	BlackboardComp->SetValueAsBool("IsChase", false);
 
-	// Blackboard¿¡ CanAttack °ªÀ» false·Î ¼³Á¤
+	// Blackboardì— CanAttack ê°’ì„ falseë¡œ ì„¤ì •
 	BlackboardComp->SetValueAsBool("CanAttack", false);
 
-	// Ä³¸¯ÅÍÀÇ ÀÌµ¿ ¼Óµµ¸¦ 500À¸·Î ¼³Á¤
+	// ìºë¦­í„°ì˜ ì´ë™ ì†ë„ë¥¼ IdleSpeedìœ¼ë¡œ ì„¤ì •
 	UpdateCharacterMovementSpeed(IdleSpeed);
 }
 
@@ -125,11 +149,11 @@ void AMonsterAIController::LosePlayer(UBlackboardComponent* BlackboardComp, AAct
 
 void AMonsterAIController::UpdateCharacterMovementSpeed(float NewSpeed)
 {
-	// ÄÁÆ®·Ñ ÁßÀÎ Ä³¸¯ÅÍ °¡Á®¿À±â
+	// ì»¨íŠ¸ë¡¤ ì¤‘ì¸ ìºë¦­í„° ê°€ì ¸ì˜¤ê¸°
 	ACharacter* ControlledCharacter = Cast<ACharacter>(GetPawn());
 	if (ControlledCharacter && ControlledCharacter->GetCharacterMovement())
 	{
-		// Ä³¸¯ÅÍ ÀÌµ¿ ¼Óµµ ¾÷µ¥ÀÌÆ®
+		// ìºë¦­í„° ì´ë™ ì†ë„ ì—…ë°ì´íŠ¸
 		ControlledCharacter->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 	}
 }
