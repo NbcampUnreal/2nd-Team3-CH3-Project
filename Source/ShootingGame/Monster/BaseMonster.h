@@ -29,9 +29,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsCharacterDeath();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
+	TSubclassOf<class ADamageIndicator> DamageIndicatorClass;
+
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
+	//virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster")
@@ -40,8 +43,8 @@ protected:
 	float MaxHealth;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
 	float Health;
-
-	virtual void Attack();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
+	float Armor;
 
 	UFUNCTION()
 	virtual void OnHitCollisionOverlap(
@@ -59,6 +62,12 @@ protected:
 		AController* EventInstigator,
 		AActor* DamageCauser) override;
 
+
+	virtual void Attack();
+
+	UFUNCTION(BlueprintCallable, Category = "Monster|Health")
+	virtual void OnTakeDamage();
+
 	UFUNCTION(BlueprintCallable, Category = "Monster|Health")
 	virtual void OnDeath();
 
@@ -68,13 +77,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
 	UAnimMontage* ReactionHitMontage;
 
+
 	/** 몬스터 사망 애니메이션 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
-	UAnimMontage* DeathMontage;
-
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
+	//UAnimMontage* DeathMontage;
 	/** 사망 후 호출될 함수 */
-	UFUNCTION()
-	void OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-
+	//UFUNCTION()
+	//void OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+private:
+	void CreateDamageIndicator(float Amount);
 	bool isDeath;
 };

@@ -1,4 +1,4 @@
-#include "Monster/BaseMonster.h"
+Ôªø#include "Monster/BaseMonster.h"
 #include "MonsterAIController.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "Components/SphereComponent.h"
@@ -6,6 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "Components/ChildActorComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Monster/DamageIndicator/DamageIndicator.h"
 
 // Sets default values
 ABaseMonster::ABaseMonster()
@@ -15,7 +16,7 @@ ABaseMonster::ABaseMonster()
 	MonsterType = "BaseMonster";
 
 	HandSocket = CreateDefaultSubobject<UChildActorComponent>(TEXT("HandSocket"));
-	HandSocket->SetupAttachment(GetMesh(), TEXT("RightHand")); // ƒ≥∏Ø≈Õ ∏ﬁΩ√¿« º“ƒœ ¿Ã∏ß
+	HandSocket->SetupAttachment(GetMesh(), TEXT("RightHand")); // Ï∫êÎ¶≠ÌÑ∞ Î©îÏãúÏùò ÏÜåÏºì Ïù¥Î¶Ñ
 
 	HitCollision = CreateDefaultSubobject<USphereComponent>(TEXT("HitCollision"));
 	HitCollision->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
@@ -27,6 +28,11 @@ ABaseMonster::ABaseMonster()
 	Health = MaxHealth;
 	isDeath = false;
 
+}
+
+void ABaseMonster::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 FName ABaseMonster::GetMonsterType()
@@ -44,17 +50,6 @@ bool ABaseMonster::IsCharacterDeath()
 	return isDeath;
 }
 
-void ABaseMonster::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-void ABaseMonster::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
 void ABaseMonster::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -71,10 +66,9 @@ void ABaseMonster::OnHitCollisionOverlap(UPrimitiveComponent* OverlappedComp, AA
 {
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Overlap!!")));
-		UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr, this, UDamageType::StaticClass());
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Overlap!!")));
 
-		//UGameplayStatics::ApplyDamage(this, 10.0f, nullptr, this, UDamageType::StaticClass());
+		UGameplayStatics::ApplyDamage(OtherActor, 10.0f, nullptr, this, UDamageType::StaticClass());
 	}
 }
 
@@ -82,27 +76,33 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	Health = FMath::Clamp(Health - ActualDamage, 0.0f, MaxHealth);
-
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster Health decreased to: %f"), Health));
 
-	if (Health <= 0.0f)
+	Health = FMath::Clamp(Health - ActualDamage, 0.0f, MaxHealth);
+
+	if (Health > 0.0f)
 	{
-		OnDeath();
+		OnTakeDamage();
+		CreateDamageIndicator(ActualDamage);
 	}
 	else
 	{
-		if (ReactionHitMontage)
-		{
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance)
-			{
-				AnimInstance->Montage_Play(ReactionHitMontage);
-			}
-		}
+		OnDeath();
 	}
 
 	return ActualDamage;
+}
+
+void ABaseMonster::OnTakeDamage()
+{
+	if (ReactionHitMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(ReactionHitMontage);
+		}
+	}
 }
 
 void ABaseMonster::OnDeath()
@@ -118,40 +118,42 @@ void ABaseMonster::OnDeath()
 	GetCharacterMovement()->StopMovementImmediately();
 
 	SetLifeSpan(5.0f);
-	//AMonsterAIController* AIController = Cast<AMonsterAIController>(GetController());
-	//if (AIController)
-	//{
-	//	AIController->UnPossess(); // AI ƒ¡∆Æ∑—∑Ø ∫Ò»∞º∫»≠
-	//}
-
-	//if (DeathMontage)
-	//{
-	//	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	//	if (AnimInstance)
-	//	{
-	//		FOnMontageEnded EndDelegate;
-	//		EndDelegate.BindUObject(this, &ABaseMonster::OnDeathMontageEnded);
-
-	//		AnimInstance->Montage_Play(DeathMontage);
-	//		AnimInstance->Montage_SetEndDelegate(EndDelegate);
-	//		return;
-	//	}
-	//}
 }
 
 Item* ABaseMonster::DropItem()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Drop Item!!!")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Drop Item!!!")));
 	return nullptr;
 }
 
-void ABaseMonster::OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	if (Montage == DeathMontage)
-	{
-		DropItem();
+//void ABaseMonster::OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+//{
+//	if (Montage == DeathMontage)
+//	{
+//		DropItem();
+//
+//		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Try Destroy Monster")));
+//		Destroy();
+//	}
+//}
 
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Try Destroy Monster")));
-		Destroy();
+void ABaseMonster::CreateDamageIndicator(float Amount)
+{
+	if (DamageIndicatorClass)
+	{
+		FVector SpawnLocation = GetActorLocation() + FVector(0, 0, 100); // Î™¨Ïä§ÌÑ∞ Î®∏Î¶¨ ÏúÑÏóê ÌëúÏãú
+		FRotator SpawnRotation = FRotator::ZeroRotator;
+		FActorSpawnParameters SpawnParameters;
+		ADamageIndicator* DamageIndicator = GetWorld()->SpawnActor<ADamageIndicator>
+			(this->DamageIndicatorClass,
+				SpawnLocation,
+				SpawnRotation,
+				SpawnParameters
+			);
+
+		if (DamageIndicator)
+		{
+			DamageIndicator->SetDamage(Amount);
+		}
 	}
 }
