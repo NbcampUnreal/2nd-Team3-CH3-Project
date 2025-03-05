@@ -9,6 +9,11 @@
 class USpringArmComponent;
 class UCameraComponent;
 class ABaseWeapon;
+class AMainWeapon;
+class ASubWeapon;
+class AMeleeWeapon;
+class AThrowableWeapon;
+class AMagazine;
 class UChildActorComponent;
 
 struct FInputActionValue;
@@ -40,6 +45,21 @@ public:
 	UPROPERTY()
 	UHexPlayerHUD* HUDWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AMainWeapon> MainWeapon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AMagazine> MainWeaponMag;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<ASubWeapon> SubWeapon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AMagazine> SubWeaponMag;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AMeleeWeapon> MeleeWeapon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AThrowableWeapon> ThrowableWeapon;
+
+	AMainWeapon* MainWeaponActor;
+
 	UFUNCTION(BlueprintCallable, Category = "Ammo")
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 
@@ -53,6 +73,9 @@ public:
 	void OnInputESCKey();
 
 	void TryPickUp();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FName GetCurrentWeaponType() const;
 
 	// 재장전 애니메이션 시퀀스 (Dynamic Montage로 재생할 애니메이션)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

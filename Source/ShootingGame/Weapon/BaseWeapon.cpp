@@ -6,6 +6,9 @@
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Core/HexboundGameInstance.h"
+#include "Managers/UIManager.h"
+#include "UI/InGame.h"
+#include "Character/MyCharacter.h"
 
 ABaseWeapon::ABaseWeapon()
 {
@@ -29,8 +32,19 @@ ABaseWeapon::ABaseWeapon()
 	WeaponType = "";		// 무기 종류
 	Damage = 0.0f;			// 데미지
 	AttackRate = 5.0f;		// 발사 간격
+	MyCharacter = nullptr;
+	UIManager = nullptr;
 }
 
+void ABaseWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (UHexboundGameInstance* GameInstance = Cast<UHexboundGameInstance>(GetGameInstance()))
+	{
+		UIManager = GameInstance->GetSubsystem<UUIManager>();
+	}
+}
 
 float ABaseWeapon::GetDamageValue() const
 {
@@ -63,10 +77,45 @@ void ABaseWeapon::DealDamage(AActor* Enemy) // Attack또는 프로젝타일에�
 	}
 }
 
-void ABaseWeapon::AttachWeaponToCharacter(ADefaultCharacter* PlayerCharacter)
+void ABaseWeapon::AttachWeaponToCharacter(ACharacter* PlayerCharacter)
 {
 	if (PlayerCharacter)
 	{
-		this->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+		MyCharacter = Cast<AMyCharacter>(PlayerCharacter);
+		this->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("RightHand"));
+		UpdateWeaponImage();
+	}
+}
+
+void ABaseWeapon::DetachWeaponFromCharacter()
+{
+	if (MyCharacter)
+	{
+		this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	}
+}
+
+void ABaseWeapon::MoveToPocket(ACharacter* PlayerCharacter, FName PocketName)
+{
+	this->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("PocketName"));
+}
+
+void ABaseWeapon::UpdateWeaponImage()
+{
+	if (UIManager)
+	{
+		UUserWidget* InGameWidgetInstance = UIManager->WidgetInstances.FindRef(EHUDState::InGameBase);
+		if (UInGame* InGameWidget = Cast<UInGame>(InGameWidgetInstance))
+		{
+			InGameWidget->PrintCurrentWeapon(WeaponType, WeaponImage);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGame widget not found in UIManager"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("UIManager is null in AFirearm"));
 	}
 }

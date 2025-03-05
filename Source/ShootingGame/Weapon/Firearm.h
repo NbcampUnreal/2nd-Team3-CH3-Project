@@ -30,7 +30,6 @@ public:
 	UAnimSequence* FireAnim;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Crosshair")
 	UTexture2D* CrosshairTexture;
-	UPROPERTY(Transient)
 	UUIManager* UIManager;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -53,13 +52,16 @@ public:
 	virtual void DetachParts(FName SocketName);
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	virtual float GetFinalAccuracty() const;
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	virtual void UpdateAmmoWidget();
 
+	virtual void UpdateAmmoWidget();
 	virtual void Attack() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Reload();
+
+	virtual void SetReloadCondition();
+	virtual bool GetReloadCondition() const;
+
 
 protected:
 
@@ -92,6 +94,7 @@ protected:
 	bool bIsLoadingComplete;
 	bool bIsMagazineAttached;
 	bool bIsSuppressorInstalled;
+	bool bCanReload;
 
 	FTimerHandle ReloadTimerHandle;
 	TArray<ABullet*> BulletPool;

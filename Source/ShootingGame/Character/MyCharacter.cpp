@@ -6,6 +6,10 @@
 #include "Weapon/Firearm.h"
 #include "Weapon/MeleeWeapon.h"
 #include "Weapon/Parts.h"
+#include "Weapon/MainWeapon.h"
+#include "Weapon/SubWeapon.h"
+#include "Weapon/ThrowableWeapon.h"
+#include "Weapon/Magazine.h"
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -325,8 +329,8 @@ void AMyCharacter::TryReload()
 	if (WeaponSlot)
 	{
 		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
-
-		if (equippedWeapon)
+		equippedWeapon->SetReloadCondition();
+		if (equippedWeapon && equippedWeapon->GetReloadCondition())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
 
@@ -339,18 +343,18 @@ void AMyCharacter::TryReload()
 					UAnimMontage* MontageInstance = AnimInstance->PlaySlotAnimationAsDynamicMontage(
 						ReloadSequence,
 						FName("DefaultSlot"),
-						0.2f,  //Blending 시작 시간 (최적화)
-						0.05f, //Blending 종료 시간 (T-포즈 최소화)
+						0.25f,  //Blending 시작 시간 (최적화)
+						0.25f, //Blending 종료 시간 (T-포즈 최소화)
 						1.0f
 					);
 
 					if (MontageInstance)
 					{
 						float Duration = MontageInstance->GetPlayLength();
-						float AdjustedTime = FMath::Max(Duration - 0.1f, 0.05f); 
+						//float AdjustedTime = FMath::Max(Duration - 0.1f, 0.05f); 
 
-						GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::StartReload, 0.1f, false);
-						GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::EndReload, AdjustedTime, false);
+						//GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::StartReload, 0.1f, false);
+						GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::EndReload, Duration, false);
 					}
 				}
 			}
@@ -398,28 +402,81 @@ void AMyCharacter::TryAddAmmo()
 
 #pragma endregion
 
+FName AMyCharacter::GetCurrentWeaponType() const
+{
+
+	if (AActor* currentAttach = WeaponSlot->GetChildActor())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("currentAttach : %s"), *currentAttach->GetName())
+		if (ABaseWeapon* currentWeapon = Cast<ABaseWeapon>(currentAttach))
+		{
+			FName weaponType = currentWeapon->WeaponType;
+			UE_LOG(LogTemp, Warning, TEXT("currentWeapon : %s"), *weaponType.ToString())
+			return weaponType;
+		}
+	}
+	return "";
+}
+
 void AMyCharacter::TryEquipMainWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Main Weapon"));
 
+	if (MainWeapon)
+	{
+		WeaponSlot->SetChildActorClass(MainWeapon);
+		AMainWeapon* Weapon = GetWorld()->SpawnActor<AMainWeapon>(MainWeapon);
+		Weapon->UpdateWeaponImage();
+		if (MainWeaponMag)
+		{
+			Magazine->SetChildActorClass(MainWeaponMag);
+		}
+		Weapon->Destroy();
+	}
 }
 
 void AMyCharacter::TryEquipSubWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Sub Weapon"));
 
+	if (SubWeapon)
+	{
+		WeaponSlot->SetChildActorClass(SubWeapon);
+		ASubWeapon* Weapon = GetWorld()->SpawnActor<ASubWeapon>(SubWeapon);
+		Weapon->UpdateWeaponImage();
+
+		if (SubWeaponMag)
+		{
+			Magazine->SetChildActorClass(SubWeaponMag);
+		}
+		Weapon->Destroy();
+	}
 }
 
 void AMyCharacter::TryEquipMeleeWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Melee Weapon"));
 
+	if (MeleeWeapon)
+	{
+		WeaponSlot->SetChildActorClass(MeleeWeapon);
+		AMeleeWeapon* Weapon = GetWorld()->SpawnActor<AMeleeWeapon>(MeleeWeapon);
+		Weapon->UpdateWeaponImage();
+		Weapon->Destroy();
+	}
 }
 
 void AMyCharacter::TryEquipThrowableWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Throwable Weapon"));
 
+	if (ThrowableWeapon)
+	{
+		WeaponSlot->SetChildActorClass(ThrowableWeapon);
+		AThrowableWeapon* Weapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+		Weapon->UpdateWeaponImage();
+		Weapon->Destroy();
+	}
 }
 
 void AMyCharacter::TryUseHealingItem()
