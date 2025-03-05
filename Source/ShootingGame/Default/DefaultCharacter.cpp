@@ -12,6 +12,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Item/Item.h"
+#include "Components/WidgetComponent.h"
 
 #include "Core/HexboundGameInstance.h"
 #include "Core/HexboundPlayerController.h"
@@ -117,21 +118,31 @@ void ADefaultCharacter::OnInputPickupKey()
 	TArray<AActor*> OverlappingActors;
 
 	// GetOverlappingActors를 호출하여 충돌된 액터들을 배열에 저장
-	GetOverlappingActors(OverlappingActors);
+	//(TArray<AActor*>& OutOverlappingActors, TSubclassOf<AActor> ClassFilter)
+	GetOverlappingActors(OverlappingActors, AItem::StaticClass());
 
-	// 겹친 액터들 중 Item을 찾아서 삭제
-	for (AActor* Actor : OverlappingActors)
+	if (OverlappingActors.Num() > 0)
 	{
-		// Item만 필터링
-		if (Actor->IsA(AItem::StaticClass())) // Item이 AActor로부터 상속된 클래스라면
+		AActor* FirstActor = OverlappingActors[0]; // 첫 번째 액터 가져오기
+
+		AItem* FirstItem = Cast<AItem>(OverlappingActors[0]);
+
+		if (FirstItem)
 		{
-			// 아이템 삭제
-			Actor->Destroy();
-			UE_LOG(LogTemp, Warning, TEXT("Find target"));
+			//FirstItem->GetHud()->SetVisibility(false);
+			FirstItem->Destroy();  // 아이템 삭제
+		}
+
+		for (int32 i = 1; i < OverlappingActors.Num(); ++i)
+		{
+			AItem* Temp = Cast<AItem>(OverlappingActors[i]);
+			if (Temp && Temp->GetHud())
+			{
+				// HUD를 활성화
+				Temp->GetHud()->SetVisibility(true);
+			}
 		}
 	}
-
-	
 }
 
 void ADefaultCharacter::OnInputInventoryKey()
