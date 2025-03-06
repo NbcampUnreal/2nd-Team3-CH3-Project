@@ -74,9 +74,12 @@ void ABaseMonster::OnHitCollisionOverlap(UPrimitiveComponent* OverlappedComp, AA
 
 float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster Health decreased to: %f"), Health));
+	float ArmorReduction = FMath::RandRange(0.0f, Armor);
+	float ActualDamage = Damage - ArmorReduction;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster Health decreased to: %f"), Health));
 
 	Health = FMath::Clamp(Health - ActualDamage, 0.0f, MaxHealth);
 
