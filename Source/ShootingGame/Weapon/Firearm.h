@@ -53,7 +53,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	virtual float GetFinalAccuracty() const;
 
-	virtual void UpdateAmmoWidget();
+	virtual void UpdateWeaponUI() override;
 	virtual void Attack() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")

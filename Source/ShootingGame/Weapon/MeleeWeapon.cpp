@@ -4,6 +4,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Managers/UIManager.h"
+#include "UI/InGame.h"
 
 AMeleeWeapon::AMeleeWeapon()
 {
@@ -53,5 +55,26 @@ void AMeleeWeapon::OnEnemyOverlap(
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, Sweep.Location);
 		}
+	}
+}
+
+void AMeleeWeapon::UpdateWeaponUI()
+{
+	Super::UpdateWeaponUI();
+	if (UIManager)
+	{
+		UUserWidget* InGameWidgetInstance = UIManager->WidgetInstances.FindRef(EHUDState::InGameBase);
+		if (UInGame* InGameWidget = Cast<UInGame>(InGameWidgetInstance))
+		{
+			InGameWidget->UpdateAmmo(1, 0);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGame widget not found in UIManager"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("UIManager is null in AFirearm"));
 	}
 }

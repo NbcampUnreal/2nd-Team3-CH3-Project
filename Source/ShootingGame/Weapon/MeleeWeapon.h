@@ -19,9 +19,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	USoundBase* HitSound;
 
-protected:
+	virtual void UpdateWeaponUI() override;
+
 	virtual void Attack() override;
-	
+
+protected:
+		
 	UFUNCTION()
 	virtual void OnEnemyOverlap(
 		UPrimitiveComponent* OverlappedComp, 

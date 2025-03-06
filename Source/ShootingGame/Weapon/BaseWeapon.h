@@ -40,7 +40,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Attack();
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	virtual void UpdateWeaponImage();
+	virtual void UpdateWeaponUI();
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void AttachWeaponToCharacter(ACharacter* PlayerCharacter);
 	UFUNCTION(BlueprintCallable, Category = "Weapon")

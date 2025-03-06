@@ -19,6 +19,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Core/HexboundGameInstance.h"
 #include "Managers/UIManager.h"
+#include "UI/InGame.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -58,8 +59,28 @@ AMyCharacter::AMyCharacter()
 	WeaponSlot = CreateDefaultSubobject<UChildActorComponent>(TEXT("WeaponSlot"));
 	WeaponSlot->SetupAttachment(GetMesh(), TEXT("RightHand")); // Skeletal Mesh의 Slot 이름
 
-	// 임시로 추가해둠 (수정 필요)
-	Magazine = CreateDefaultSubobject<UChildActorComponent>(TEXT("Magazine"));
+	MainWeaponActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("MainWeapon"));
+	MainWeaponActor->SetupAttachment(GetMesh(), TEXT("MainWeaponSocket"));
+	MainWeaponActor->SetChildActorClass(AMainWeapon::StaticClass());
+
+	SubWeaponActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("SubWeapon"));
+	SubWeaponActor->SetupAttachment(GetMesh(), TEXT("SubWeaponSocket"));
+	SubWeaponActor->SetChildActorClass(ASubWeapon::StaticClass());
+
+	MeleeWeaponActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("MeleeWeapon"));
+	MeleeWeaponActor->SetupAttachment(GetMesh(), TEXT("MeleeWeaponSocket"));
+	MeleeWeaponActor->SetChildActorClass(AMeleeWeapon::StaticClass());
+
+	ThrowableWeaponActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("ThrowableWeapon"));
+	ThrowableWeaponActor->SetupAttachment(GetMesh(), TEXT("ThrowableWeaponSocket"));
+	ThrowableWeaponActor->SetChildActorClass(AThrowableWeapon::StaticClass());
+
+
+	// 탄창
+	MainWeaponMagz = CreateDefaultSubobject<UChildActorComponent>(TEXT("MainWeaponMagazine"));
+	SubWeaponMagz = CreateDefaultSubobject<UChildActorComponent>(TEXT("SubWeaponMagazine"));
+
+	InitUIImage = LoadObject<UTexture2D>(nullptr, TEXT("/Game/Weapons/Images/T_FistImage.T_FistImage"));
 }
 
 void AMyCharacter::BeginPlay()
@@ -93,6 +114,17 @@ void AMyCharacter::BeginPlay()
             }
         }
     }
+
+	OurGameInstance = Cast<UHexboundGameInstance>(GetGameInstance());
+
+	// 시작시 총기 없음
+	MainWeaponActor->SetVisibility(false);
+	SubWeaponActor->SetVisibility(false);
+	MeleeWeaponActor->SetVisibility(false);
+	ThrowableWeaponActor->SetVisibility(false);
+
+	//총기 UI 초기화
+	InitializingUI();
 }
 
 void AMyCharacter::Tick(float DeltaTime)
@@ -252,18 +284,30 @@ void AMyCharacter::PerformMeleeAttack()
 	if (WeaponSlot)
 	{
 		// TO DO : Equipped Weapon Type 별 캐스팅 분리 or 액션 분리
-
-		ABaseWeapon* equippedWeapon = Cast<ABaseWeapon>(WeaponSlot->GetChildActor());
-		//EquippedWeapon = Cast<ABaseWeapon>(Weapon->GetChildActor());
-		if (equippedWeapon)
+		if (AFirearm* equippedWeapon = Cast<AFirearm>(GetCurrentWeapon()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
-			equippedWeapon->Attack(); // 무기의 Attack 함수 호출
-
-			// 로깅용 => 추후 삭제 필요
-			if (AFirearm* fireWeapon = Cast<AFirearm>(equippedWeapon))
+			//EquippedWeapon = Cast<ABaseWeapon>(Weapon->GetChildActor());
+			if (equippedWeapon)
 			{
-				LogFireAmmoState(fireWeapon);
+				UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
+				equippedWeapon->Attack(); // 무기의 Attack 함수 호출
+
+				// 로깅용 => 추후 삭제 필요
+				LogFireAmmoState(equippedWeapon);
+
+			}
+		}
+
+		else if (AMeleeWeapon* MeleeWeapon = Cast<AMeleeWeapon>(GetCurrentWeapon()))
+		{
+			MeleeWeapon->Attack();
+		}
+
+		else if (AThrowableWeapon* ThrowableWeapon = Cast<AThrowableWeapon>(GetCurrentWeapon()))
+		{
+			if (ThrowableWeapon->bIsInHand)
+			{
+				ThrowableWeapon->Throw();
 			}
 		}
 		else
@@ -336,62 +380,78 @@ void AMyCharacter::TryReload()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Reload Weapon"));
 
-	if (WeaponSlot)
+	if (AFirearm* equippedWeapon = Cast<AFirearm>(GetCurrentWeapon()))
 	{
-		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
-		equippedWeapon->SetReloadCondition();
-		if (equippedWeapon && equippedWeapon->GetReloadCondition())
+		if (equippedWeapon)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
+			equippedWeapon->SetReloadCondition();
 
-			StartReload();  //bIsReloading = true (재장전 시작)
-
-			if (ReloadSequence)  //재장전 애니메이션이 존재하는 경우
+			if (equippedWeapon->GetReloadCondition())
 			{
-				if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+				UE_LOG(LogTemp, Warning, TEXT("Using Weapon: %s"), *equippedWeapon->GetName());
+
+				StartReload();  //bIsReloading = true (재장전 시작)
+
+				if (ReloadSequence)  //재장전 애니메이션이 존재하는 경우
 				{
-					UAnimMontage* MontageInstance = AnimInstance->PlaySlotAnimationAsDynamicMontage(
-						ReloadSequence,
-						FName("DefaultSlot"),
-						0.25f,  //Blending 시작 시간 (최적화)
-						0.25f, //Blending 종료 시간 (T-포즈 최소화)
-						1.0f
-					);
-
-					if (MontageInstance)
+					if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 					{
-						float Duration = MontageInstance->GetPlayLength();
-						//float AdjustedTime = FMath::Max(Duration - 0.1f, 0.05f); 
+						UAnimMontage* MontageInstance = AnimInstance->PlaySlotAnimationAsDynamicMontage(
+							ReloadSequence,
+							FName("DefaultSlot"),
+							0.25f,  //Blending 시작 시간 (최적화)
+							0.25f, //Blending 종료 시간 (T-포즈 최소화)
+							1.0f
+						);
 
-						//GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::StartReload, 0.1f, false);
-						GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::EndReload, Duration, false);
+						if (MontageInstance)
+						{
+							float Duration = MontageInstance->GetPlayLength();
+							//float AdjustedTime = FMath::Max(Duration - 0.1f, 0.05f); 
+
+							//GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::StartReload, 0.1f, false);
+							GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AMyCharacter::EndReload, Duration, false);
+						}
 					}
 				}
-			}
 
-			equippedWeapon->Reload();
-			LogFireAmmoState(equippedWeapon);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("No Weapon Equipped"));
+				equippedWeapon->Reload();
+				LogFireAmmoState(equippedWeapon);
+			}
 		}
 	}
+
+	else if (AThrowableWeapon* ThrowableWeapon = Cast<AThrowableWeapon>(GetCurrentWeapon()))
+	{
+		ThrowableWeapon->Spawn();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("No Weapon Equipped"));
+	}
+
 }
 
 void AMyCharacter::AttachParts()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Attach Parts To Weapon"));
 
-	if (WeaponSlot)
-	{
-		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
+	AFirearm* equippedWeapon = Cast<AFirearm>(GetCurrentWeapon());
 
-		if (Magazine)
-		{
-			AParts* magazine = Cast<AParts>(Magazine->GetChildActor());
-			equippedWeapon->EquipParts(magazine); // 무기의 Attack 함수 호출
-		}
+	if (MainWeaponMagz && MainWeaponActor->IsVisible() && !bIsMainWeaponMagExist)
+	{
+		UClass* MainMagClassptr = MainWeaponMagz->GetChildActorClass();
+		MainWeaponMagActor = GetWorld()->SpawnActor<AMagazine>(MainMagClassptr);
+		equippedWeapon->EquipParts(MainWeaponMagActor); // 무기의 EquipParts 함수 호출
+		bIsMainWeaponMagExist = true;
+	}
+
+	else if (SubWeaponMagz && SubWeaponActor->IsVisible() && !bIsSubWeaponMagExist)
+	{
+		UClass* SubMagClassptr = SubWeaponMagz->GetChildActorClass();
+		SubWeaponMagActor = GetWorld()->SpawnActor<AMagazine>(SubMagClassptr);
+		equippedWeapon->EquipParts(SubWeaponMagActor); // 무기의 EquipParts 함수 호출
+		bIsSubWeaponMagExist = true;
 	}
 }
 
@@ -399,33 +459,60 @@ void AMyCharacter::TryAddAmmo()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Add Ammo To Weapon"));
 
-	if (WeaponSlot)
+	if (AFirearm* equippedWeapon = Cast<AFirearm>(GetCurrentWeapon()))
 	{
-		AFirearm* equippedWeapon = Cast<AFirearm>(WeaponSlot->GetChildActor());
-
 		equippedWeapon->AddAmmo(30); // 무기의 Attack 함수 호출
 
 		LogFireAmmoState(equippedWeapon);	// 로깅용 => 추후 삭제 필요
+	}
+
+	else if (AThrowableWeapon* ThrowableWeapon = Cast<AThrowableWeapon>(GetCurrentWeapon()))
+	{
+		ThrowableWeapon->AddQuantity(1);
 	}
 }
 
 
 #pragma endregion
 
-FName AMyCharacter::GetCurrentWeaponType() const
+void AMyCharacter::InitializingUI()
 {
-
-	if (AActor* currentAttach = WeaponSlot->GetChildActor())
+	UIManagerForInitUI  = GetGameInstance()->GetSubsystem<UUIManager>();
+	if (UIManagerForInitUI)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("currentAttach : %s"), *currentAttach->GetName())
-		if (ABaseWeapon* currentWeapon = Cast<ABaseWeapon>(currentAttach))
+		UUserWidget* InGameWidgetInstance = UIManagerForInitUI->WidgetInstances.FindRef(EHUDState::InGameBase);
+		if (UInGame* InGameWidget = Cast<UInGame>(InGameWidgetInstance))
 		{
-			FName weaponType = currentWeapon->WeaponType;
-			UE_LOG(LogTemp, Warning, TEXT("currentWeapon : %s"), *weaponType.ToString())
-			return weaponType;
+			InGameWidget->PrintCurrentWeapon("Fist", InitUIImage);
 		}
 	}
-	return "";
+}
+
+ABaseWeapon* AMyCharacter::GetCurrentWeapon() const
+{
+	ABaseWeapon* equippedWeapon = nullptr;
+
+	if (MainWeaponActor->IsVisible())
+	{
+		equippedWeapon = Cast<ABaseWeapon>(MainWeaponActor->GetChildActor());
+	}
+
+	else if (SubWeaponActor->IsVisible())
+	{
+		equippedWeapon = Cast<ABaseWeapon>(SubWeaponActor->GetChildActor());
+	}
+
+	else if (MeleeWeaponActor->IsVisible())
+	{
+		equippedWeapon = Cast<ABaseWeapon>(MeleeWeaponActor->GetChildActor());
+	}
+
+	else if (ThrowableWeaponActor->IsVisible())
+	{
+		equippedWeapon = Cast<ABaseWeapon>(ThrowableWeaponActor->GetChildActor());
+	}
+
+	return equippedWeapon;
 }
 
 void AMyCharacter::PlayWeaponSwapAnimation(TFunction<void()> OnAnimationEnd)
@@ -488,17 +575,22 @@ void AMyCharacter::TryEquipMainWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Main Weapon"));
 	PlayWeaponSwapAnimation([this]() {
-		if (MainWeapon)
+		SubWeaponActor->SetVisibility(false);
+		if (bIsSubWeaponMagExist)
 		{
-			WeaponSlot->SetChildActorClass(MainWeapon);
-			AMainWeapon* Weapon = GetWorld()->SpawnActor<AMainWeapon>(MainWeapon);
-			Weapon->UpdateWeaponImage();
-			if (MainWeaponMag)
-			{
-				Magazine->SetChildActorClass(MainWeaponMag);
-			}
-			Weapon->Destroy();
+			SubWeaponMagActor->SetHidden(true);
 		}
+		MeleeWeaponActor->SetVisibility(false);
+		ThrowableWeaponActor->SetVisibility(false);
+
+		MainWeaponActor->SetVisibility(true);
+		if (bIsMainWeaponMagExist)
+		{
+			MainWeaponMagActor->SetHidden(false);
+		}
+
+		AMainWeapon* Weapon = Cast<AMainWeapon>(MainWeaponActor->GetChildActor());
+		Weapon->UpdateWeaponUI();
 		});
 }
 
@@ -507,18 +599,22 @@ void AMyCharacter::TryEquipSubWeapon()
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Sub Weapon"));
 
 	PlayWeaponSwapAnimation([this]() {
-		if (SubWeapon)
+		MainWeaponActor->SetVisibility(false);
+		if (bIsMainWeaponMagExist)
 		{
-			WeaponSlot->SetChildActorClass(SubWeapon);
-			ASubWeapon* Weapon = GetWorld()->SpawnActor<ASubWeapon>(SubWeapon);
-			Weapon->UpdateWeaponImage();
-
-			if (SubWeaponMag)
-			{
-				Magazine->SetChildActorClass(SubWeaponMag);
-			}
-			Weapon->Destroy();
+			MainWeaponMagActor->SetHidden(true);
 		}
+		MeleeWeaponActor->SetVisibility(false);
+		ThrowableWeaponActor->SetVisibility(false);
+
+		SubWeaponActor->SetVisibility(true);
+		if (bIsSubWeaponMagExist)
+		{
+			SubWeaponMagActor->SetHidden(false);
+		}
+
+		ASubWeapon* Weapon = Cast<ASubWeapon>(SubWeaponActor->GetChildActor());
+		Weapon->UpdateWeaponUI();
 		});
 }
 
@@ -527,13 +623,22 @@ void AMyCharacter::TryEquipMeleeWeapon()
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Melee Weapon"));
 
 	PlayWeaponSwapAnimation([this]() {
-		if (MeleeWeapon)
+		MainWeaponActor->SetVisibility(false);
+		if (bIsMainWeaponMagExist)
 		{
-			WeaponSlot->SetChildActorClass(MeleeWeapon);
-			AMeleeWeapon* Weapon = GetWorld()->SpawnActor<AMeleeWeapon>(MeleeWeapon);
-			Weapon->UpdateWeaponImage();
-			Weapon->Destroy();
+			MainWeaponMagActor->SetHidden(true);
 		}
+		SubWeaponActor->SetVisibility(false);
+		if (bIsSubWeaponMagExist)
+		{
+			SubWeaponMagActor->SetHidden(true);
+		}
+		ThrowableWeaponActor->SetVisibility(false);
+
+		MeleeWeaponActor->SetVisibility(true);
+
+		AMeleeWeapon* Weapon = Cast<AMeleeWeapon>(MeleeWeaponActor->GetChildActor());
+		Weapon->UpdateWeaponUI();
 		});
 }
 
@@ -542,13 +647,22 @@ void AMyCharacter::TryEquipThrowableWeapon()
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Throwable Weapon"));
 
 	PlayWeaponSwapAnimation([this]() {
-		if (ThrowableWeapon)
+		MainWeaponActor->SetVisibility(false);
+		if (bIsMainWeaponMagExist)
 		{
-			WeaponSlot->SetChildActorClass(ThrowableWeapon);
-			AThrowableWeapon* Weapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-			Weapon->UpdateWeaponImage();
-			Weapon->Destroy();
+			MainWeaponMagActor->SetHidden(true);
 		}
+		SubWeaponActor->SetVisibility(false);
+		if (bIsSubWeaponMagExist)
+		{
+			SubWeaponMagActor->SetHidden(true);
+		}
+		MeleeWeaponActor->SetVisibility(false);
+
+		ThrowableWeaponActor->SetVisibility(true);
+
+		AThrowableWeapon* Weapon = Cast<AThrowableWeapon>(ThrowableWeaponActor->GetChildActor());
+		Weapon->UpdateWeaponUI();
 		});
 }
 

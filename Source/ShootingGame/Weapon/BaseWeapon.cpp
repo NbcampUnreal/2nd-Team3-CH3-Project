@@ -83,7 +83,7 @@ void ABaseWeapon::AttachWeaponToCharacter(ACharacter* PlayerCharacter)
 	{
 		MyCharacter = Cast<AMyCharacter>(PlayerCharacter);
 		this->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("RightHand"));
-		UpdateWeaponImage();
+		UpdateWeaponUI();
 	}
 }
 
@@ -100,7 +100,7 @@ void ABaseWeapon::MoveToPocket(ACharacter* PlayerCharacter, FName PocketName)
 	this->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("PocketName"));
 }
 
-void ABaseWeapon::UpdateWeaponImage()
+void ABaseWeapon::UpdateWeaponUI()
 {
 	if (UIManager)
 	{
