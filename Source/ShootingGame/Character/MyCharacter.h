@@ -60,8 +60,29 @@ public:
 
 	AMainWeapon* MainWeaponActor;
 
-	UFUNCTION(BlueprintCallable, Category = "Ammo")
-	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
+	// 무기 변경 애니메이션
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimSequence* WeaponSwapAnimation;
+
+	// 무기 변경 애니메이션 실행 함수
+	void PlayWeaponSwapAnimation(TFunction<void()> OnAnimationEnd);
+
+	// 캐릭터의 애니메이션 인스턴스
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimInstance* CharacterAnimInstance;
+
+	// 무기 변경 중 상태 플래그
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bIsSwappingWeapon = false;
+
+	// 무기 교체 완료 콜백 함수
+	void FinishWeaponSwap();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Animation")
+	void SetWeaponSwapState(bool bIsSwapping);
+
+	// 타이머 핸들
+	FTimerHandle SwapWeaponTimerHandle;
 
 	// ====================== 설정, 인벤토리, 아이템 상호작용  ===========================
 	bool bIsShowInventory;
@@ -155,6 +176,9 @@ protected:
 	TSubclassOf<class AParts> Parts;
 
 	AParts* InstanceParts;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	bool IsMenuLevel = false;
 	// ======================  캐릭터 무기 장착 및 아이템 사용  ===========================
 	void TryEquipMainWeapon();
 	void TryEquipSubWeapon();

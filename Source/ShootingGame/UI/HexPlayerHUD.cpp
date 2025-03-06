@@ -23,12 +23,3 @@ void UHexPlayerHUD::UpdateHealth(float CurrentHealth, float MaxHealth)
         HealthBar->SetPercent(Ratio);
     }
 }
-
-void UHexPlayerHUD::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
-{
-    if (AmmoText)
-    {
-        FString AmmoString = FString::Printf(TEXT("%d / %d"), CurrentAmmo, MaxAmmo);
-        AmmoText->SetText(FText::FromString(AmmoString));
-    }
-}

@@ -20,6 +20,7 @@
 #include "Core/HexboundGameInstance.h"
 #include "Managers/UIManager.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 AMyCharacter::AMyCharacter()
 {
@@ -63,26 +64,35 @@ AMyCharacter::AMyCharacter()
 
 void AMyCharacter::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	if (HUDWidgetClass)
-	{
-		HUDWidget = CreateWidget<UHexPlayerHUD>(GetWorld(), HUDWidgetClass);
-		if (HUDWidget)
-		{
-			HUDWidget->AddToViewport();
+    FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
 
-			// 초기 체력 반영
-			HUDWidget->UpdateHealth(Health, MaxHealth);
+    UE_LOG(LogTemp, Warning, TEXT("current Level: %s"), *CurrentLevelName);
 
-			// 초기 탄약 반영 (필요하다면)
-			// HUDWidget->UpdateAmmo(CurrentAmmo, MaxAmmo);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("HUDWidgetClass is NULL!"));
-	}
+    // MenuLevel이면 HUD를 숨김
+    if (CurrentLevelName == "MenuLevel")
+    {
+        UE_LOG(LogTemp, Warning, TEXT("MenuLevel HUD"));
+
+        if (HUDWidget)
+        {
+            HUDWidget->RemoveFromViewport();  // HUD 삭제
+        }
+    }
+    else
+    {
+        // MenuLevel이 아닐 때만 HUD 표시
+        if (HUDWidgetClass)
+        {
+            HUDWidget = CreateWidget<UHexPlayerHUD>(GetWorld(), HUDWidgetClass);
+            if (HUDWidget)
+            {
+                HUDWidget->AddToViewport();
+                HUDWidget->UpdateHealth(Health, MaxHealth);
+            }
+        }
+    }
 }
 
 void AMyCharacter::Tick(float DeltaTime)
@@ -418,65 +428,128 @@ FName AMyCharacter::GetCurrentWeaponType() const
 	return "";
 }
 
+void AMyCharacter::PlayWeaponSwapAnimation(TFunction<void()> OnAnimationEnd)
+{
+	if (bIsSwappingWeapon) return; // 이미 무기 교체 중이면 중복 실행 방지
+
+	bIsSwappingWeapon = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("Try weapon swap animation"));
+
+	//블루프린트에서 bIsSwappingWeapon 값 변경
+	SetWeaponSwapState(true);
+
+	if (WeaponSwapAnimation)
+	{
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			UAnimMontage* MontageInstance = AnimInstance->PlaySlotAnimationAsDynamicMontage(
+				WeaponSwapAnimation,
+				FName("WeaponSwapSlot"),
+				0.2f,
+				0.2f,
+				1.0f
+			);
+
+			if (MontageInstance)
+			{
+				float Duration = MontageInstance->GetPlayLength();
+
+				FTimerDelegate TimerDelegate;
+				TimerDelegate.BindLambda([this, OnAnimationEnd]() {
+					FinishWeaponSwap();
+					OnAnimationEnd();
+					});
+
+				GetWorldTimerManager().SetTimer(
+					SwapWeaponTimerHandle,
+					TimerDelegate,
+					Duration,
+					false
+				);
+			}
+		}
+	}
+	else
+	{
+		FinishWeaponSwap();
+		OnAnimationEnd();
+	}
+}
+
+void AMyCharacter::FinishWeaponSwap()
+{
+	bIsSwappingWeapon = false;
+
+	SetWeaponSwapState(false);
+}
+
 void AMyCharacter::TryEquipMainWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Main Weapon"));
-
-	if (MainWeapon)
-	{
-		WeaponSlot->SetChildActorClass(MainWeapon);
-		AMainWeapon* Weapon = GetWorld()->SpawnActor<AMainWeapon>(MainWeapon);
-		Weapon->UpdateWeaponImage();
-		if (MainWeaponMag)
+	PlayWeaponSwapAnimation([this]() {
+		if (MainWeapon)
 		{
-			Magazine->SetChildActorClass(MainWeaponMag);
+			WeaponSlot->SetChildActorClass(MainWeapon);
+			AMainWeapon* Weapon = GetWorld()->SpawnActor<AMainWeapon>(MainWeapon);
+			Weapon->UpdateWeaponImage();
+			if (MainWeaponMag)
+			{
+				Magazine->SetChildActorClass(MainWeaponMag);
+			}
+			Weapon->Destroy();
 		}
-		Weapon->Destroy();
-	}
+		});
 }
 
 void AMyCharacter::TryEquipSubWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Sub Weapon"));
 
-	if (SubWeapon)
-	{
-		WeaponSlot->SetChildActorClass(SubWeapon);
-		ASubWeapon* Weapon = GetWorld()->SpawnActor<ASubWeapon>(SubWeapon);
-		Weapon->UpdateWeaponImage();
-
-		if (SubWeaponMag)
+	PlayWeaponSwapAnimation([this]() {
+		if (SubWeapon)
 		{
-			Magazine->SetChildActorClass(SubWeaponMag);
+			WeaponSlot->SetChildActorClass(SubWeapon);
+			ASubWeapon* Weapon = GetWorld()->SpawnActor<ASubWeapon>(SubWeapon);
+			Weapon->UpdateWeaponImage();
+
+			if (SubWeaponMag)
+			{
+				Magazine->SetChildActorClass(SubWeaponMag);
+			}
+			Weapon->Destroy();
 		}
-		Weapon->Destroy();
-	}
+		});
 }
 
 void AMyCharacter::TryEquipMeleeWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Melee Weapon"));
 
-	if (MeleeWeapon)
-	{
-		WeaponSlot->SetChildActorClass(MeleeWeapon);
-		AMeleeWeapon* Weapon = GetWorld()->SpawnActor<AMeleeWeapon>(MeleeWeapon);
-		Weapon->UpdateWeaponImage();
-		Weapon->Destroy();
-	}
+	PlayWeaponSwapAnimation([this]() {
+		if (MeleeWeapon)
+		{
+			WeaponSlot->SetChildActorClass(MeleeWeapon);
+			AMeleeWeapon* Weapon = GetWorld()->SpawnActor<AMeleeWeapon>(MeleeWeapon);
+			Weapon->UpdateWeaponImage();
+			Weapon->Destroy();
+		}
+		});
 }
 
 void AMyCharacter::TryEquipThrowableWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Throwable Weapon"));
 
-	if (ThrowableWeapon)
-	{
-		WeaponSlot->SetChildActorClass(ThrowableWeapon);
-		AThrowableWeapon* Weapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-		Weapon->UpdateWeaponImage();
-		Weapon->Destroy();
-	}
+	PlayWeaponSwapAnimation([this]() {
+		if (ThrowableWeapon)
+		{
+			WeaponSlot->SetChildActorClass(ThrowableWeapon);
+			AThrowableWeapon* Weapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+			Weapon->UpdateWeaponImage();
+			Weapon->Destroy();
+		}
+		});
 }
 
 void AMyCharacter::TryUseHealingItem()
@@ -640,9 +713,9 @@ void AMyCharacter::CharacterTakeDamage(float DamageAmount)
 			AnimInstance->PlaySlotAnimationAsDynamicMontage(
 				HitReactionSequence,
 				FName("HitReactionSlot"),
-				0.2f,  // Blend In
-				0.2f,  // Blend Out
-				1.0f   // 재생 속도
+				0.01f,  // Blend In
+				0.01f,  // Blend Out
+				0.1f   // 재생 속도
 			);
 		}
 	}
@@ -737,13 +810,6 @@ void AMyCharacter::LogFireAmmoState(AFirearm* fireWeapon)
 			fireWeapon->GetMaxReloadedAmmoValue()));
 }
 
-void AMyCharacter::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
-{
-	if (HUDWidget)
-	{
-		HUDWidget->UpdateAmmo(CurrentAmmo, MaxAmmo);
-	}
-}
 
 void AMyCharacter::StartReload()
 {
