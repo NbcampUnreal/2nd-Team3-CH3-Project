@@ -120,6 +120,8 @@ void AMonsterAIController::OnDetectedPlayer(UBlackboardComponent* BlackboardComp
 
 	// 캐릭터의 이동 속도를 ChaseSpeed로 설정
 	UpdateCharacterMovementSpeed(ChaseSpeed);
+
+	SightConfig->PeripheralVisionAngleDegrees = 180.0f;
 }
 
 void AMonsterAIController::LosePlayer(UBlackboardComponent* BlackboardComp, AActor* Actor)
@@ -143,6 +145,8 @@ void AMonsterAIController::LosePlayer(UBlackboardComponent* BlackboardComp, AAct
 
 	// 캐릭터의 이동 속도를 IdleSpeed으로 설정
 	UpdateCharacterMovementSpeed(IdleSpeed);
+
+	SightConfig->PeripheralVisionAngleDegrees = 80.0f;
 }
 
 
