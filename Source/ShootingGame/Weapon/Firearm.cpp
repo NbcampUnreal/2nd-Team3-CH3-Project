@@ -82,7 +82,7 @@ void AFirearm::Attack()
 			}
 
 			ReloadedAmmo--;
-			UpdateAmmoWidget();
+			UpdateWeaponUI();
 		}
 
 		Super::Attack();
@@ -169,7 +169,7 @@ void AFirearm::BeginPlay()
 		UIManager = GameInstance->GetSubsystem<UUIManager>();
 		if (UIManager)
 		{
-			UpdateAmmoWidget(); // 초기 Ammo 상태 반영
+			UpdateWeaponUI(); // 초기 Ammo 상태 반영
 		}
 	}
 
@@ -197,7 +197,7 @@ void AFirearm::Reload()
 				CurrentAmmo = FMath::Max(CurrentAmmo - ReloadValue, 0);
 				ReloadedAmmo = MaxReloadedAmmo;
 				bIsLoadingComplete = true;
-				UpdateAmmoWidget();
+				UpdateWeaponUI();
 			},
 			ReloadTime,
 			false
@@ -245,7 +245,7 @@ float AFirearm::GetFinalAccuracty() const
 void AFirearm::AddAmmo(int32 AmmoToAdd)
 {
 	CurrentAmmo = FMath::Clamp(CurrentAmmo + AmmoToAdd, 0, MaxAmmo);
-	UpdateAmmoWidget();
+	UpdateWeaponUI();
 }
 
 void AFirearm::EquipParts(AParts* Parts) // 파츠를 파츠에 저장된 소켓명에 따라 먼저 소켓에 부착 후 클래스 판별하여 기능 적용
@@ -261,7 +261,7 @@ void AFirearm::EquipParts(AParts* Parts) // 파츠를 파츠에 저장된 소켓
 			MaxReloadedAmmo = Magazine->GetMagazineCapacity();
 			ReloadedAmmo = MaxReloadedAmmo;
 			bIsMagazineAttached = true;
-			UpdateAmmoWidget();
+			UpdateWeaponUI();
 		}
 
 		if (Parts->IsA(ASuppressor::StaticClass()))
@@ -306,8 +306,9 @@ void AFirearm::DetachParts(FName SocketName) // 파츠 결합 전 기존 파트 
 	}
 }
 
-void AFirearm::UpdateAmmoWidget()
+void AFirearm::UpdateWeaponUI()
 {
+	Super::UpdateWeaponUI();
 	if (UIManager)
 	{
 		UUserWidget* InGameWidgetInstance = UIManager->WidgetInstances.FindRef(EHUDState::InGameBase);

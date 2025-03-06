@@ -15,6 +15,8 @@ class AMeleeWeapon;
 class AThrowableWeapon;
 class AMagazine;
 class UChildActorComponent;
+class UHexboundGameInstance;
+class UUIManager;
 
 struct FInputActionValue;
 
@@ -45,20 +47,19 @@ public:
 	UPROPERTY()
 	UHexPlayerHUD* HUDWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<AMainWeapon> MainWeapon;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<AMagazine> MainWeaponMag;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<ASubWeapon> SubWeapon;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<AMagazine> SubWeaponMag;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<AMeleeWeapon> MeleeWeapon;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<AThrowableWeapon> ThrowableWeapon;
 
-	AMainWeapon* MainWeaponActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* MainWeaponActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* SubWeaponActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* MeleeWeaponActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* ThrowableWeaponActor;
+
 
 	// 무기 변경 애니메이션
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -95,8 +96,6 @@ public:
 
 	void TryPickUp();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	FName GetCurrentWeaponType() const;
 
 	// 재장전 애니메이션 시퀀스 (Dynamic Montage로 재생할 애니메이션)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -117,6 +116,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EndReload();
 
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	ABaseWeapon* GetCurrentWeapon() const;
 
 
 protected:
@@ -152,11 +153,20 @@ protected:
 	UChildActorComponent* WeaponSlot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	UChildActorComponent* Magazine;
+	UChildActorComponent* MainWeaponMagz;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UChildActorComponent* SubWeaponMagz;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	ABaseWeapon* EquippedWeapon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	AMagazine* MainWeaponMagActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	AMagazine* SubWeaponMagActor;
 	
+	UUIManager* UIManagerForInitUI;
+	UTexture2D* InitUIImage;
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PerformMeleeAttack();
 
@@ -209,6 +219,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "State")
 	bool GetIsHitReacting() const;
+	UFUNCTION()
+	void InitializingUI();
 
 	// ====================== 회전 관련  ===========================
 
@@ -236,7 +248,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TSubclassOf<ABaseWeapon> DefaultWeaponClass;
 
-
+	UHexboundGameInstance* OurGameInstance;
 	FTimerHandle HealingTimerHandle;
 	UFUNCTION()
 	void CompleteHealing();
@@ -247,6 +259,8 @@ private:
 	bool bIsTurning = false;
 	bool bIsFirstPerson = false;
 	bool bInterpToThirdPerson = false;
+	bool bIsSubWeaponMagExist = false;
+	bool bIsMainWeaponMagExist = false;
 
 	UFUNCTION()
 	void StartZoom();

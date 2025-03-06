@@ -6,6 +6,8 @@
 #include "NiagaraComponent.h"
 #include "Weapon/ThrowableProjectile.h"
 #include "Kismet/GameplayStatics.h"
+#include "Managers/UIManager.h"
+#include "UI/InGame.h"
 
 AThrowableWeapon::AThrowableWeapon()
 {
@@ -18,29 +20,30 @@ AThrowableWeapon::AThrowableWeapon()
 	ThrowableProjectile = nullptr;
 	ThrowableProjectileClass = nullptr;
 	ThrowForce = 1200.0f;
-	CurrentPossession = 0;
-	MaxPossession = 10;
+	CurrentQuantity = 0;
+	MaxQuantity = 10;
 	bIsInHand = false;
 }
 
-int32 AThrowableWeapon::GetCurrentPossession() const
+int32 AThrowableWeapon::GetCurrentQuantity() const
 {
-	return CurrentPossession;
+	return CurrentQuantity;
 }
 
-int32 AThrowableWeapon::GetMaxPossession() const
+int32 AThrowableWeapon::GetMaxQuantity() const
 {
-	return MaxPossession;
+	return MaxQuantity;
 }
 
-void AThrowableWeapon::AddPossession(int32 AddNumber)
+void AThrowableWeapon::AddQuantity(int32 AddNumber)
 {
-	CurrentPossession = FMath::Min(CurrentPossession + AddNumber, MaxPossession);
+	CurrentQuantity = FMath::Min(CurrentQuantity + AddNumber, MaxQuantity);
+	UpdateWeaponUI();
 }
 
 void AThrowableWeapon::Spawn()
 {
-	if (!bIsInHand && CurrentPossession > 0)
+	if (!bIsInHand && CurrentQuantity > 0)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
@@ -50,8 +53,9 @@ void AThrowableWeapon::Spawn()
 			if (ThrowableProjectile->AttachToComponent(this->RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale))
 			{
 				ThrowableProjectile->SpawnSetting();
-				CurrentPossession--;
+				CurrentQuantity--;
 				bIsInHand = true;
+				UpdateWeaponUI();
 			}
 		}
 	}
@@ -72,5 +76,27 @@ void AThrowableWeapon::Throw()
 		ThrowableProjectile->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		ThrowableProjectile->Thrown(ThrowForce);
 		bIsInHand = false;
+		UpdateWeaponUI();
+	}
+}
+
+void AThrowableWeapon::UpdateWeaponUI()
+{
+	Super::UpdateWeaponUI();
+	if (UIManager)
+	{
+		UUserWidget* InGameWidgetInstance = UIManager->WidgetInstances.FindRef(EHUDState::InGameBase);
+		if (UInGame* InGameWidget = Cast<UInGame>(InGameWidgetInstance))
+		{
+			InGameWidget->UpdateAmmo(bIsInHand, CurrentQuantity);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("InGame widget not found in UIManager"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("UIManager is null in AFirearm"));
 	}
 }

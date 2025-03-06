@@ -16,17 +16,20 @@ public:
 	AThrowableWeapon();
 
 	UFUNCTION(BlueprintPure, Category = "ThrowableWeapon")
-	virtual int32 GetCurrentPossession() const;
-	virtual int32 GetMaxPossession() const;
+	virtual int32 GetCurrentQuantity() const;
+	virtual int32 GetMaxQuantity() const;
 	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
 	virtual void Throw();
 	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
 	virtual void Spawn();
 	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
-	virtual void AddPossession(int32 AddNumber);
+	virtual void AddQuantity(int32 AddNumber);
 	UFUNCTION(BlueprintCallable, Category = "ThrowableWeapon")
 	virtual void ReadyToExplosion();
+	virtual void UpdateWeaponUI() override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ThrowableWeapon")
+	bool bIsInHand;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ThrowableWeapon")
@@ -36,13 +39,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ThrowableWeapon")
 	TSubclassOf<AThrowableProjectile> ThrowableProjectileClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ThrowableWeapon")
-	int32 MaxPossession;
+	int32 MaxQuantity;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ThrowableWeapon")
-	int32 CurrentPossession;
+	int32 CurrentQuantity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ThrowableWeapon")
 	float ThrowForce;
 
-	bool bIsInHand;
+
 
 	FTimerHandle ReloadTimerHandle;
 
