@@ -149,7 +149,7 @@ void ADefaultCharacter::OnInputPickupKey()
 
 void ADefaultCharacter::OnInputInventoryKey()
 {
-	if (UGameInstance* GameInstance = GetGameInstance())
+	/*if (UGameInstance* GameInstance = GetGameInstance())
 	{
 		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
 		if (HexboundGameInstance == nullptr)
@@ -185,7 +185,7 @@ void ADefaultCharacter::OnInputInventoryKey()
 			bIsShowInventory = !bIsShowInventory;
 		}
 		
-	}
+	}*/
 }
 
 void ADefaultCharacter::OnInputESCKey()
@@ -257,10 +257,10 @@ void ADefaultCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ADefaultCharacter::Look);
 
 		// Pickup
-		EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputPickupKey);
+		//EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputPickupKey);
 
 		// Inventory
-		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputInventoryKey);
+		//EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputInventoryKey);
 
 		// ESC
 		EnhancedInputComponent->BindAction(SettingAction, ETriggerEvent::Started, this, &ADefaultCharacter::OnInputESCKey);
