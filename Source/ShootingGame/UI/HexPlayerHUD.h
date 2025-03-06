@@ -18,11 +18,10 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 
-	// 체력 표시 텍스트 바인딩
+	//HP bar
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HealthText;
 
-	// 체력 바 바인딩
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HealthBar;
 
