@@ -81,6 +81,9 @@ AMyCharacter::AMyCharacter()
 	SubWeaponMagz = CreateDefaultSubobject<UChildActorComponent>(TEXT("SubWeaponMagazine"));
 
 	InitUIImage = LoadObject<UTexture2D>(nullptr, TEXT("/Game/Weapons/Images/T_FistImage.T_FistImage"));
+
+	bIsHandEmpty = true;
+	WeaponSlotNumber = 0;
 }
 
 void AMyCharacter::BeginPlay()
@@ -117,14 +120,14 @@ void AMyCharacter::BeginPlay()
 
 	OurGameInstance = Cast<UHexboundGameInstance>(GetGameInstance());
 
-	// 시작시 총기 없음
+	// 시작시 총기 설정
 	MainWeaponActor->SetVisibility(false);
 	SubWeaponActor->SetVisibility(false);
 	MeleeWeaponActor->SetVisibility(false);
 	ThrowableWeaponActor->SetVisibility(false);
-
+	//TryEquipMainWeapon();
 	//총기 UI 초기화
-	InitializingUI();
+	//InitializingUI();
 }
 
 void AMyCharacter::Tick(float DeltaTime)
@@ -574,6 +577,8 @@ void AMyCharacter::FinishWeaponSwap()
 void AMyCharacter::TryEquipMainWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Main Weapon"));
+
+	WeaponSlotNumber = 1;
 	PlayWeaponSwapAnimation([this]() {
 		SubWeaponActor->SetVisibility(false);
 		if (bIsSubWeaponMagExist)
@@ -589,6 +594,11 @@ void AMyCharacter::TryEquipMainWeapon()
 			MainWeaponMagActor->SetHidden(false);
 		}
 
+		if (bIsHandEmpty)
+		{
+			bIsHandEmpty = false;
+		}
+
 		AMainWeapon* Weapon = Cast<AMainWeapon>(MainWeaponActor->GetChildActor());
 		Weapon->UpdateWeaponUI();
 		});
@@ -598,6 +608,7 @@ void AMyCharacter::TryEquipSubWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Sub Weapon"));
 
+	WeaponSlotNumber = 2;
 	PlayWeaponSwapAnimation([this]() {
 		MainWeaponActor->SetVisibility(false);
 		if (bIsMainWeaponMagExist)
@@ -613,6 +624,11 @@ void AMyCharacter::TryEquipSubWeapon()
 			SubWeaponMagActor->SetHidden(false);
 		}
 
+		if (bIsHandEmpty)
+		{
+			bIsHandEmpty = false;
+		}
+
 		ASubWeapon* Weapon = Cast<ASubWeapon>(SubWeaponActor->GetChildActor());
 		Weapon->UpdateWeaponUI();
 		});
@@ -622,6 +638,7 @@ void AMyCharacter::TryEquipMeleeWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Melee Weapon"));
 
+	WeaponSlotNumber = 3;
 	PlayWeaponSwapAnimation([this]() {
 		MainWeaponActor->SetVisibility(false);
 		if (bIsMainWeaponMagExist)
@@ -637,6 +654,11 @@ void AMyCharacter::TryEquipMeleeWeapon()
 
 		MeleeWeaponActor->SetVisibility(true);
 
+		if (bIsHandEmpty)
+		{
+			bIsHandEmpty = false;
+		}
+
 		AMeleeWeapon* Weapon = Cast<AMeleeWeapon>(MeleeWeaponActor->GetChildActor());
 		Weapon->UpdateWeaponUI();
 		});
@@ -646,6 +668,7 @@ void AMyCharacter::TryEquipThrowableWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Try Equip Throwable Weapon"));
 
+	WeaponSlotNumber = 4;
 	PlayWeaponSwapAnimation([this]() {
 		MainWeaponActor->SetVisibility(false);
 		if (bIsMainWeaponMagExist)
@@ -660,6 +683,11 @@ void AMyCharacter::TryEquipThrowableWeapon()
 		MeleeWeaponActor->SetVisibility(false);
 
 		ThrowableWeaponActor->SetVisibility(true);
+
+		if (bIsHandEmpty)
+		{
+			bIsHandEmpty = false;
+		}
 
 		AThrowableWeapon* Weapon = Cast<AThrowableWeapon>(ThrowableWeaponActor->GetChildActor());
 		Weapon->UpdateWeaponUI();
