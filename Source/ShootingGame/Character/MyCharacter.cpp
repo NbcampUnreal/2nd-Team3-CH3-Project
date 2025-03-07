@@ -296,7 +296,7 @@ void AMyCharacter::PerformMeleeAttack()
 				equippedWeapon->Attack(); // 무기의 Attack 함수 호출
 
 				// 로깅용 => 추후 삭제 필요
-				LogFireAmmoState(equippedWeapon);
+				//LogFireAmmoState(equippedWeapon);
 
 			}
 		}
@@ -419,7 +419,7 @@ void AMyCharacter::TryReload()
 				}
 
 				equippedWeapon->Reload();
-				LogFireAmmoState(equippedWeapon);
+				//LogFireAmmoState(equippedWeapon);
 			}
 		}
 	}
@@ -466,7 +466,7 @@ void AMyCharacter::TryAddAmmo()
 	{
 		equippedWeapon->AddAmmo(30); // 무기의 Attack 함수 호출
 
-		LogFireAmmoState(equippedWeapon);	// 로깅용 => 추후 삭제 필요
+		//LogFireAmmoState(equippedWeapon);	// 로깅용 => 추후 삭제 필요
 	}
 
 	else if (AThrowableWeapon* ThrowableWeapon = Cast<AThrowableWeapon>(GetCurrentWeapon()))
@@ -838,7 +838,7 @@ void AMyCharacter::CharacterTakeDamage(float DamageAmount)
 
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Current Health : %f"), Health));
 	}
 
 	if (HUDWidget)
