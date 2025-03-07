@@ -90,7 +90,7 @@ void ABullet::onHit(
 
 			if (hitEffect)
 			{
-				if (OtherActor->IsA<ABaseMonster>())
+				if (OtherActor->IsA<ABaseMonster>() || OtherActor->ActorHasTag("Enemy"))
 				{
 					gun->DealDamage(OtherActor);
 
