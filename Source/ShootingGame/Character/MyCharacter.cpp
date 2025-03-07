@@ -726,7 +726,7 @@ void AMyCharacter::CompleteHealing()
 
 void AMyCharacter::OnInputInventoryKey()
 {
-	if (UGameInstance* GameInstance = GetGameInstance())
+	/*if (UGameInstance* GameInstance = GetGameInstance())
 	{
 		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
 		if (HexboundGameInstance == nullptr)
@@ -762,7 +762,7 @@ void AMyCharacter::OnInputInventoryKey()
 			bIsShowInventory = !bIsShowInventory;
 		}
 
-	}
+	}*/
 }
 
 void AMyCharacter::OnInputESCKey()
@@ -1145,7 +1145,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 			}
 
 			// ====================== 설정, 인벤토리, 아이템 상호작용  ===========================
-			if (PlayerController->InputInventoryAction)
+			/*if (PlayerController->InputInventoryAction)
 			{
 				EnhancedInput->BindAction(
 					PlayerController->InputInventoryAction,
@@ -1153,7 +1153,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 					this,
 					&AMyCharacter::OnInputInventoryKey
 				);
-			}
+			}*/
 
 			if (PlayerController->InputESCAction)
 			{
@@ -1165,7 +1165,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 				);
 			}
 
-			if (PlayerController->InputPickUpAction)
+			/*if (PlayerController->InputPickUpAction)
 			{
 				EnhancedInput->BindAction(
 					PlayerController->InputPickUpAction,
@@ -1173,7 +1173,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 					this,
 					&AMyCharacter::TryPickUp
 				);
-			}
+			}*/
 		}
 	}
 }
