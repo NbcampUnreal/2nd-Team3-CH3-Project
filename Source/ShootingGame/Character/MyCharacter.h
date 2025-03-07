@@ -119,6 +119,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	ABaseWeapon* GetCurrentWeapon() const;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	bool bIsHandEmpty;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int32 WeaponSlotNumber;
 
 protected:
 	virtual void Tick(float DeltaTime) override;
