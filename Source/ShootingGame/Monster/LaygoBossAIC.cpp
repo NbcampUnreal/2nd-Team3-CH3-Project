@@ -40,7 +40,7 @@ void ALaygoBossAIC::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 			{
 				if (actor->ActorHasTag("Player"))
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("[Boss Monster] Player detected by Sight!"));
+					//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Blue, TEXT("[Boss Monster] Player detected by Sight!"));
 
 					if (BlackboardComp)
 					{
@@ -51,19 +51,16 @@ void ALaygoBossAIC::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 						{
 							BossMonster->SetPlayerActor(actor);
 						}
-
 					}
 
-					//AActor* PlayerActor = Cast<AActor>(BlackboardComp->GetValueAsObject("PlayerActor"));
-					//CheckPlayerActor(actor);
 					break;
 				}
 				return;
 			}
 			else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())		// 데미지 정보에 의해 찾았을때
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("[Boss Monster] Player detected by Damage!"));
-				//CheckPlayerActor(actor);
+				//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("[Boss Monster] Player detected by Damage!"));
+
 				return;
 			}
 		}
@@ -72,5 +69,14 @@ void ALaygoBossAIC::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 
 void ALaygoBossAIC::OnBossBattleStart()
 {
+
+}
+
+void ALaygoBossAIC::SetBossPage(int Page)
+{
+	if (BlackboardComp)
+	{
+		BlackboardComp->SetValueAsInt("CurrentPageKey", Page);
+	}
 
 }

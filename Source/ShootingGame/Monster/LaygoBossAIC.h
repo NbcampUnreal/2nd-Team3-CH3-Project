@@ -19,5 +19,6 @@ public:
 	void OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors) override;
 
 	void OnBossBattleStart() override;
-	
+
+	void SetBossPage(int Page);
 };

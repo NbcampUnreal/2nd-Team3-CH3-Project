@@ -16,8 +16,32 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-public:	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
+	float MaxHealth;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
+	float Health;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Health")
+	float Armor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster|Animation")
+	UAnimMontage* ReactionHitMontage;
+
+	UFUNCTION()
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		AController* EventInstigator,
+		AActor* DamageCauser) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Monster|Health")
+	virtual void OnTakeDamage();
+
+	UFUNCTION(BlueprintCallable, Category = "Monster|Health")
+	virtual void OnDeath();
+
+	bool isDeath;
+private:
 
 };

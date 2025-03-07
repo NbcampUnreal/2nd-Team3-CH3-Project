@@ -110,7 +110,7 @@ void ABaseMonster::OnTakeDamage()
 
 void ABaseMonster::OnDeath()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster OnDeath")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Monster OnDeath")));
 	isDeath = true;
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 	GetMesh()->Stop();
@@ -129,16 +129,6 @@ Item* ABaseMonster::DropItem()
 	return nullptr;
 }
 
-//void ABaseMonster::OnDeathMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-//{
-//	if (Montage == DeathMontage)
-//	{
-//		DropItem();
-//
-//		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("Try Destroy Monster")));
-//		Destroy();
-//	}
-//}
 
 void ABaseMonster::CreateDamageIndicator(float Amount)
 {
