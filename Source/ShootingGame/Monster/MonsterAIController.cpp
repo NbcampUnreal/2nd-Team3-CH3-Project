@@ -112,7 +112,7 @@ void AMonsterAIController::CheckPlayerActor(AActor* sensedActor)
 
 void AMonsterAIController::OnDetectedPlayer(UBlackboardComponent* BlackboardComp, AActor* Actor)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Monster] Player Detected!!")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Monster] Player Detected!!")));
 	BlackboardComp->SetValueAsObject("PlayerActorKey", Actor);
 
 	// Blackboard에 PlayerDetected 값을 false로 설정
@@ -126,7 +126,7 @@ void AMonsterAIController::OnDetectedPlayer(UBlackboardComponent* BlackboardComp
 
 void AMonsterAIController::LosePlayer(UBlackboardComponent* BlackboardComp, AActor* Actor)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Monster] Lose Player!!")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("[Monster] Lose Player!!")));
 
 	// Player Actor Reference Set nullptr
 	BlackboardComp->SetValueAsObject("PlayerActorKey", nullptr);

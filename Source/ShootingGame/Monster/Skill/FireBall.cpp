@@ -44,7 +44,7 @@ void AFireBall::OnFireBallOverlap(UPrimitiveComponent* OverlappedComp, AActor* O
 {
 	if (OtherActor && OtherActor->ActorHasTag("Player"))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("FireBall Overlap!!")));
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("FireBall Overlap!!")));
 		UGameplayStatics::ApplyDamage(OtherActor, Damage, nullptr, this, UDamageType::StaticClass());
 		Destroy();
 	}
