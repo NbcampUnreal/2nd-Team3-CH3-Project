@@ -20,6 +20,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnGameStart();
 
+	UFUNCTION(BlueprintCallable)
+	void OnGameOver();
+
+	void AddScore(int amount);
+
+	int KillCount;
+	int Score;
+	float PlayTime;
+
 private:
 	void Init();
 	AMyPlayerController* myPlayerController;

@@ -61,5 +61,35 @@ void AHexboundGameState::OnGameStart()
 
 		}
 	}
+
+	Score = 0;
+	KillCount = 0;
+	PlayTime = 0.f;
+
+}
+
+void AHexboundGameState::OnGameOver()
+{
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		UHexboundGameInstance* HexboundGameInstance = Cast<UHexboundGameInstance>(GameInstance);
+		if (HexboundGameInstance)
+		{
+			UUIManager* UIManager = HexboundGameInstance->GetSubsystem<UUIManager>();
+			UIManager->SetUIState(EHUDState::GameOver);
+		}
+
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+		{
+			PlayerController->SetPause(true);
+			PlayerController->bShowMouseCursor = true;
+			PlayerController->SetInputMode(FInputModeUIOnly());
+		}
+	}
+}
+
+void AHexboundGameState::AddScore(int amount)
+{
+	Score += amount;
 }
 

@@ -19,7 +19,9 @@ enum class EHUDState : uint8
 	InGameBase,
 
 	Pause,
-	Inventory
+	Inventory,
+
+	GameOver
 };
 
 

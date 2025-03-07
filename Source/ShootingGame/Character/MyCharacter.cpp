@@ -22,6 +22,7 @@
 #include "UI/InGame.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/HexboundGameState.h"
 
 AMyCharacter::AMyCharacter()
 {
@@ -931,6 +932,11 @@ void AMyCharacter::OnPlayerDeath()
 		3.0f, // 3초 후 제거
 		false
 	);
+
+	if (AHexboundGameState* GameState = Cast<AHexboundGameState>(GetWorld()->GetGameState()))
+	{
+		GameState->OnGameOver();
+	}
 }
 
 bool AMyCharacter::GetIsDead() const
