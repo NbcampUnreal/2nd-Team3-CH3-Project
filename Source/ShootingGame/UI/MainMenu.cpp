@@ -36,7 +36,7 @@ void UMainMenu::NativeConstruct()
 
 void UMainMenu::OnClickedGameStart()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked GameStart Button")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked GameStart Button")));
 
 	if (uiManager)
 	{
@@ -54,7 +54,7 @@ void UMainMenu::OnClickedGameStart()
 
 void UMainMenu::OnClickedSetting()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked Setting Button")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked Setting Button")));
 
 	if (uiManager)
 	{
@@ -64,7 +64,7 @@ void UMainMenu::OnClickedSetting()
 
 void UMainMenu::OnClickedAchievements()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked Achievements Button")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked Achievements Button")));
 
 	if (uiManager)
 	{
@@ -74,7 +74,7 @@ void UMainMenu::OnClickedAchievements()
 
 void UMainMenu::OnClickedExit()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked Exit Button")));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, FString::Printf(TEXT("OnClicked Exit Button")));
 
 	UKismetSystemLibrary::QuitGame(this, 0, EQuitPreference::Quit, false);
 }
